@@ -95,9 +95,43 @@ async def get_config():
     pdf_gen = PDFGenerator()
     return pdf_gen.config
 
+@app.get("/api/config/factory-reset")
+async def get_factory_config():
+    """Return factory default configuration"""
+    factory_config = {
+        'prose_size': 'prose',
+        'prose_color': '',
+        'custom_classes': {
+            'a': 'text-blue-600 hover:text-blue-800',
+            'blockquote': 'border-l-4 border-gray-300 text-gray-600',
+            'code': 'bg-gray-100 text-red-600',
+            'h1': 'text-gray-900 font-bold',
+            'h2': 'text-gray-800 font-semibold',
+            'h3': 'text-gray-700 font-medium',
+            'h4': 'text-gray-600',
+            'h5': 'text-gray-600',
+            'h6': 'text-gray-600',
+            'hr': '',
+            'img': '',
+            'li': '',
+            'ol': '',
+            'p': 'text-gray-800',
+            'pre': 'bg-gray-50 border border-gray-200',
+            'table': 'border border-gray-200',
+            'thead': '',
+            'tbody': '',
+            'tr': '',
+            'td': 'border border-gray-200 px-4 py-2',
+            'th': 'border border-gray-200 px-4 py-2 font-semibold bg-gray-50',
+            'ul': ''
+        }
+    }
+    return factory_config
+
 @app.post("/api/config")
 async def update_config(
     prose_size: str = Form(...),
+    prose_color: str = Form(""),
     h1_classes: str = Form(""),
     h2_classes: str = Form(""),
     h3_classes: str = Form(""),
@@ -110,6 +144,11 @@ async def update_config(
     pre_classes: str = Form(""),
     blockquote_classes: str = Form(""),
     table_classes: str = Form(""),
+    thead_classes: str = Form(""),
+    tbody_classes: str = Form(""),
+    tr_classes: str = Form(""),
+    td_classes: str = Form(""),
+    th_classes: str = Form(""),
     ul_classes: str = Form(""),
     ol_classes: str = Form(""),
     li_classes: str = Form(""),
@@ -118,6 +157,7 @@ async def update_config(
 ):
     updates = {
         "prose_size": prose_size,
+        "prose_color": prose_color,
         "custom_classes": {
             "h1": h1_classes,
             "h2": h2_classes,
@@ -131,6 +171,11 @@ async def update_config(
             "pre": pre_classes,
             "blockquote": blockquote_classes,
             "table": table_classes,
+            "thead": thead_classes,
+            "tbody": tbody_classes,
+            "tr": tr_classes,
+            "td": td_classes,
+            "th": th_classes,
             "ul": ul_classes,
             "ol": ol_classes,
             "li": li_classes,
@@ -193,11 +238,9 @@ async def preview_markdown(request: Request, file_id: str):
             # Fallback: use markdown without custom classes
             html_body = pdf_gen.markdown_to_html(markdown_content)
 
-        # Extract just the filename without the UUID prefix and extension
+        # Extract just the filename without extension
+        # The filename here is the original filename from metadata, not the UUID filename
         original_filename = Path(filename).stem
-        if len(original_filename) > 36 and original_filename.count('-') >= 4:
-            # Remove UUID prefix if present (format: uuid.extension)
-            original_filename = filename.split('.', 1)[0][37:]  # Remove UUID and first dot
 
         print(f"DEBUG: About to render template")
         print(f"DEBUG: html_body is string: {isinstance(html_body, str)}")

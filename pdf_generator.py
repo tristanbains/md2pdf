@@ -53,6 +53,7 @@ class PDFGenerator:
         """Create default config with academic preset"""
         default_config = {
             'prose_size': 'prose',
+            'prose_color': '',
             'custom_classes': {
                 'a': 'text-blue-600 hover:text-blue-800',
                 'blockquote': 'border-l-4 border-gray-300 text-gray-600',
@@ -70,6 +71,11 @@ class PDFGenerator:
                 'p': 'text-gray-800',
                 'pre': 'bg-gray-50 border border-gray-200',
                 'table': 'border border-gray-200',
+                'thead': '',
+                'tbody': '',
+                'tr': '',
+                'td': 'border border-gray-200 px-4 py-2',
+                'th': 'border border-gray-200 px-4 py-2 font-semibold bg-gray-50',
                 'ul': ''
             },
             'pdf_options': {
@@ -94,6 +100,8 @@ class PDFGenerator:
     def update_config(self, updates: Dict):
         if 'prose_size' in updates:
             self.config['prose_size'] = updates['prose_size']
+        if 'prose_color' in updates:
+            self.config['prose_color'] = updates['prose_color']
         if 'custom_classes' in updates:
             self.config['custom_classes'].update(updates['custom_classes'])
         self.save_config()

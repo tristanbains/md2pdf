@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ filename }} - Preview</title>
+    <title>{{ filename }}</title>
     
     <!-- TailwindCSS with Typography Plugin -->
     <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
@@ -166,30 +166,38 @@
     <!-- Print Controls (hidden when printing) -->
     <div class="print-controls no-print">
         <h3 class="text-lg font-semibold mb-3">{{ filename }}</h3>
-        <button onclick="generatePDF()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors mb-2 w-full">
-            📄 Save as PDF
-        </button>
         <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors mb-2 w-full">
-            🖨️ Print/Preview
+            🖨️ Print/Save as PDF
         </button>
         <button onclick="window.history.back()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors w-full">
             ← Back to Upload
         </button>
         <div class="text-sm text-gray-600 mt-3">
-            <p><strong>📄 Save as PDF:</strong> Opens print dialog with "{{ filename }}.pdf" pre-filled</p>
-            <p><strong>💡 Steps:</strong> 1) Select "Save as PDF" 2) Choose Downloads folder 3) Confirm filename</p>
-            <p><strong>🖨️ Print/Preview:</strong> Alternative print dialog for custom settings</p>
+            <p><strong>💡 How to save:</strong> Click "Print/Save as PDF", select "Save as PDF" as destination</p>
+            <p><strong>📁 Filename:</strong> Will be pre-filled as "{{ filename }}.pdf"</p>
         </div>
     </div>
 
     <!-- Page Container (A4 size on screen, full width when printing) -->
     <div class="page-container">
-        <article class="prose {{ config.prose_size if (config.prose_size and config.prose_size.startswith('prose-')) else ('prose-' + (config.prose_size or 'lg')) }} max-w-none">
+        <article class="prose {% if config.prose_color %}prose-{{ config.prose_color }}{% endif %} {{ config.prose_size if (config.prose_size and config.prose_size.startswith('prose-')) else ('prose-' + (config.prose_size or 'lg')) }} max-w-none">
             {{ html_content | safe }}
         </article>
     </div>
 
     <script>
+        // Set up print filename handling
+        const originalTitle = document.title;
+        const pdfFilename = "{{ filename }}";
+
+        window.addEventListener('beforeprint', function() {
+            document.title = pdfFilename;
+        });
+
+        window.addEventListener('afterprint', function() {
+            document.title = originalTitle;
+        });
+
         // Add keyboard shortcut for printing
         document.addEventListener('keydown', function(e) {
             if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
@@ -216,100 +224,6 @@
                 });
             });
         });
-
-        // Generate and download PDF with correct filename
-        async function generatePDF() {
-            const filename = "{{ filename }}.pdf";
-            
-            // Show loading message
-            const button = event.target;
-            const originalText = button.innerHTML;
-            button.innerHTML = '⏳ Generating PDF...';
-            button.disabled = true;
-            
-            try {
-                // Use the browser's print API to generate PDF
-                if (window.chrome && window.chrome.webstore) {
-                    // Chrome/Edge approach - use the newer API if available
-                    try {
-                        const printOptions = {
-                            margins: {
-                                top: 0.8,
-                                bottom: 0.8,
-                                left: 0.8,
-                                right: 0.8
-                            },
-                            pageSize: 'A4',
-                            preferCSSPageSize: true
-                        };
-                        
-                        // This will trigger the browser's save dialog with suggested filename
-                        const beforePrint = () => {
-                            document.title = filename.replace('.pdf', '');
-                        };
-                        
-                        const afterPrint = () => {
-                            document.title = "{{ filename }} - Preview";
-                        };
-                        
-                        window.addEventListener('beforeprint', beforePrint);
-                        window.addEventListener('afterprint', afterPrint);
-                        
-                        // Trigger print with custom settings
-                        window.print();
-                        
-                        // Clean up event listeners
-                        setTimeout(() => {
-                            window.removeEventListener('beforeprint', beforePrint);
-                            window.removeEventListener('afterprint', afterPrint);
-                        }, 1000);
-                        
-                    } catch (error) {
-                        // Fallback to regular print
-                        window.print();
-                    }
-                } else {
-                    // Firefox/Safari approach
-                    // Set document title to suggest filename
-                    const originalTitle = document.title;
-                    document.title = filename.replace('.pdf', '');
-                    
-                    // Trigger print dialog
-                    window.print();
-                    
-                    // Restore original title after delay
-                    setTimeout(() => {
-                        document.title = originalTitle;
-                    }, 1000);
-                }
-                
-                // Show success message
-                setTimeout(() => {
-                    const successMsg = document.createElement('div');
-                    successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
-                    successMsg.innerHTML = `
-                        <strong>PDF Ready!</strong><br>
-                        1. Select "Save as PDF" from destination<br>
-                        2. Choose Downloads folder<br>
-                        3. Filename: "${filename}" (pre-filled)
-                    `;
-                    document.body.appendChild(successMsg);
-                    
-                    setTimeout(() => {
-                        successMsg.remove();
-                    }, 5000);
-                }, 500);
-                
-            } catch (error) {
-                console.error('PDF generation error:', error);
-                // Fallback to regular print
-                window.print();
-            } finally {
-                // Restore button
-                button.innerHTML = originalText;
-                button.disabled = false;
-            }
-        }
     </script>
 </body>
 </html>

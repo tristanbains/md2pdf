@@ -83,18 +83,31 @@
             </div>
             <div class="collapse-content">
                 <form id="settingsForm">
-                    <!-- Prose Size -->
-                    <div class="form-control mb-4">
-                        <label class="label">
-                            <span class="label-text font-semibold">Prose Size</span>
-                        </label>
-                        <select name="prose_size" id="proseSize" class="select select-bordered w-full max-w-xs">
-                            <option value="prose-sm" {% if config.prose_size == 'prose-sm' %}selected{% endif %}>Small (prose-sm)</option>
-                            <option value="prose" {% if config.prose_size == 'prose' %}selected{% endif %}>Base (prose)</option>
-                            <option value="prose-lg" {% if config.prose_size == 'prose-lg' %}selected{% endif %}>Large (prose-lg)</option>
-                            <option value="prose-xl" {% if config.prose_size == 'prose-xl' %}selected{% endif %}>Extra Large (prose-xl)</option>
-                            <option value="prose-2xl" {% if config.prose_size == 'prose-2xl' %}selected{% endif %}>2X Large (prose-2xl)</option>
-                        </select>
+                    <!-- Prose Settings -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Prose Size</span>
+                            </label>
+                            <select name="prose_size" id="proseSize" class="select select-bordered w-full">
+                                <option value="prose-sm" {% if config.prose_size == 'prose-sm' %}selected{% endif %}>Small (prose-sm)</option>
+                                <option value="prose" {% if config.prose_size == 'prose' %}selected{% endif %}>Base (prose)</option>
+                                <option value="prose-lg" {% if config.prose_size == 'prose-lg' %}selected{% endif %}>Large (prose-lg)</option>
+                                <option value="prose-xl" {% if config.prose_size == 'prose-xl' %}selected{% endif %}>Extra Large (prose-xl)</option>
+                                <option value="prose-2xl" {% if config.prose_size == 'prose-2xl' %}selected{% endif %}>2X Large (prose-2xl)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Prose Color</span>
+                            </label>
+                            <input type="text" name="prose_color" id="proseColor" value="{{ config.prose_color or '' }}"
+                                   placeholder="zinc, slate, gray, etc." class="input input-bordered w-full" />
+                            <label class="label">
+                                <span class="label-text-alt">Examples: zinc, slate, gray, neutral, stone, red, orange, etc.</span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Custom Classes (COMPACT 3-COLUMN GRID) -->
@@ -199,6 +212,46 @@
 
                         <div class="form-control">
                             <label class="label py-1">
+                                <span class="label-text text-sm">Table Head (thead)</span>
+                            </label>
+                            <input type="text" name="thead_classes" id="thead_classes" value="{{ config.custom_classes.thead }}"
+                                   placeholder="bg-gray-50" class="input input-bordered input-sm w-full" />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label py-1">
+                                <span class="label-text text-sm">Table Body (tbody)</span>
+                            </label>
+                            <input type="text" name="tbody_classes" id="tbody_classes" value="{{ config.custom_classes.tbody }}"
+                                   placeholder="" class="input input-bordered input-sm w-full" />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label py-1">
+                                <span class="label-text text-sm">Table Row (tr)</span>
+                            </label>
+                            <input type="text" name="tr_classes" id="tr_classes" value="{{ config.custom_classes.tr }}"
+                                   placeholder="hover:bg-gray-50" class="input input-bordered input-sm w-full" />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label py-1">
+                                <span class="label-text text-sm">Table Cell (td)</span>
+                            </label>
+                            <input type="text" name="td_classes" id="td_classes" value="{{ config.custom_classes.td }}"
+                                   placeholder="border border-gray-200 px-4 py-2" class="input input-bordered input-sm w-full" />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label py-1">
+                                <span class="label-text text-sm">Table Header (th)</span>
+                            </label>
+                            <input type="text" name="th_classes" id="th_classes" value="{{ config.custom_classes.th }}"
+                                   placeholder="border border-gray-200 px-4 py-2 font-semibold bg-gray-50" class="input input-bordered input-sm w-full" />
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label py-1">
                                 <span class="label-text text-sm">Unordered List</span>
                             </label>
                             <input type="text" name="ul_classes" id="ul_classes" value="{{ config.custom_classes.ul }}"
@@ -251,6 +304,12 @@
                             </svg>
                             Revert to Saved
                         </button>
+                        <button type="button" id="factoryResetBtn" class="btn btn-outline btn-error">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                            Factory Reset
+                        </button>
                     </div>
                 </form>
             </div>
@@ -287,6 +346,22 @@
         </div>
     </dialog>
 
+    <!-- Factory Reset Confirmation Modal -->
+    <dialog id="factoryResetModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg">🔄 Factory Reset</h3>
+            <p class="py-4">This will reset all styling settings to factory defaults. This action cannot be undone. Are you sure?</p>
+            <div class="modal-action">
+                <button id="cancelFactoryReset" class="btn btn-ghost">
+                    Cancel
+                </button>
+                <button id="confirmFactoryReset" class="btn btn-error">
+                    Reset to Factory Defaults
+                </button>
+            </div>
+        </div>
+    </dialog>
+
     <script>
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
@@ -297,8 +372,10 @@
         const loadingModal = document.getElementById('loadingModal');
         const loadingMessage = document.getElementById('loadingMessage');
         const unsavedModal = document.getElementById('unsavedModal');
+        const factoryResetModal = document.getElementById('factoryResetModal');
         const saveBtn = document.getElementById('saveBtn');
         const revertBtn = document.getElementById('revertBtn');
+        const factoryResetBtn = document.getElementById('factoryResetBtn');
 
         let currentFile = null;
         let savedConfig = {};
@@ -307,7 +384,8 @@
         // Field names for tracking
         const fieldNames = ['h1_classes', 'h2_classes', 'h3_classes', 'h4_classes', 'h5_classes', 'h6_classes',
                            'p_classes', 'a_classes', 'code_classes', 'pre_classes', 'blockquote_classes',
-                           'table_classes', 'ul_classes', 'ol_classes', 'li_classes', 'hr_classes', 'img_classes'];
+                           'table_classes', 'thead_classes', 'tbody_classes', 'tr_classes', 'td_classes', 'th_classes',
+                           'ul_classes', 'ol_classes', 'li_classes', 'hr_classes', 'img_classes'];
 
         // Load saved config on page load
         async function loadSavedConfig() {
@@ -323,7 +401,8 @@
         // Compare current form values with saved config
         function checkForChanges() {
             const proseSize = document.getElementById('proseSize').value;
-            let hasChanges = proseSize !== savedConfig.prose_size;
+            const proseColor = document.getElementById('proseColor').value.trim();
+            let hasChanges = proseSize !== savedConfig.prose_size || proseColor !== (savedConfig.prose_color || '');
 
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -385,6 +464,7 @@
         function getCurrentConfig() {
             const config = {
                 prose_size: document.getElementById('proseSize').value,
+                prose_color: document.getElementById('proseColor').value.trim(),
                 custom_classes: {},
                 pdf_options: savedConfig.pdf_options || {}
             };
@@ -409,9 +489,13 @@
             }
         });
 
-        // Prose size change listener
+        // Prose size and color change listeners
         document.getElementById('proseSize').addEventListener('change', () => {
             updateAllFieldIndicators();
+            checkForChanges();
+        });
+
+        document.getElementById('proseColor').addEventListener('input', () => {
             checkForChanges();
         });
 
@@ -419,6 +503,7 @@
         revertBtn.addEventListener('click', () => {
             // Reload form with saved config
             document.getElementById('proseSize').value = savedConfig.prose_size;
+            document.getElementById('proseColor').value = savedConfig.prose_color || '';
 
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -428,6 +513,46 @@
 
             updateAllFieldIndicators();
             checkForChanges();
+        });
+
+        // Factory Reset button handler
+        factoryResetBtn.addEventListener('click', () => {
+            factoryResetModal.showModal();
+        });
+
+        document.getElementById('cancelFactoryReset').addEventListener('click', () => {
+            factoryResetModal.close();
+        });
+
+        document.getElementById('confirmFactoryReset').addEventListener('click', async () => {
+            try {
+                // Fetch factory defaults
+                const response = await fetch('/api/config/factory-reset');
+                const factoryConfig = await response.json();
+
+                // Update form with factory defaults
+                document.getElementById('proseSize').value = factoryConfig.prose_size;
+                document.getElementById('proseColor').value = factoryConfig.prose_color || '';
+
+                fieldNames.forEach(fieldName => {
+                    const input = document.getElementById(fieldName);
+                    const elementName = fieldName.replace('_classes', '');
+                    input.value = factoryConfig.custom_classes[elementName] || '';
+                });
+
+                // Close modal
+                factoryResetModal.close();
+
+                // Update indicators and check for changes
+                updateAllFieldIndicators();
+                checkForChanges();
+
+                // Show success message
+                alert('Settings reset to factory defaults. Click "Save Settings" to apply permanently.');
+            } catch (error) {
+                console.error('Factory reset failed:', error);
+                alert('Failed to load factory defaults. Please try again.');
+            }
         });
 
         // Drag and drop functionality
