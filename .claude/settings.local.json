@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:docs.claude.com)",
+      "Bash(uv init:*)",
+      "Bash(uv add:*)",
+      "Bash(python:*)",
+      "Bash(uv run:*)",
+      "Bash(brew list:*)",
+      "Bash(pkg-config:*)",
+      "Read(//usr/local/Cellar/glib/**)",
+      "Bash(export:*)",
+      "Bash(brew reinstall:*)",
+      "Bash(cat:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: MD2PDF markdown to PDF converter\n\n- FastAPI backend with browser-based PDF generation\n- TailwindCSS styling with configurable classes\n- Temporary config system for unsaved settings\n- UUID-based file storage with metadata\n- Jinja2 templates for preview and upload UI\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

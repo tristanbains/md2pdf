@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ filename }} - Preview</title>
+    
+    <!-- TailwindCSS with Typography Plugin -->
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    
+    <!-- Print-optimized CSS -->
+    <style>
+        /* Print-specific styles */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 20mm 20mm 20mm 20mm;
+            }
+            
+            /* Hide print button and controls when printing */
+            .no-print {
+                display: none !important;
+            }
+            
+            /* Ensure colors are preserved */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            
+            /* Break handling */
+            h1, h2, h3, h4, h5, h6 {
+                break-after: avoid;
+                page-break-after: avoid;
+            }
+            
+            /* Prevent breaking inside elements */
+            pre, blockquote, table {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+            
+            /* Link handling for print */
+            a[href]:after {
+                content: "";
+            }
+            
+            /* Internal links (anchors) should not show URLs */
+            a[href^="#"]:after {
+                content: "";
+            }
+            
+            /* Table styles for print */
+            table {
+                border-collapse: collapse;
+                width: 100%;
+            }
+            
+            /* Code block improvements */
+            pre {
+                white-space: pre-wrap;
+                word-break: break-all;
+            }
+        }
+        
+        /* Screen-only styles */
+        @media screen {
+            body {
+                background-color: #f5f5f5;
+                padding: 2rem;
+            }
+            
+            .page-container {
+                max-width: 210mm;
+                min-height: 297mm;
+                margin: 0 auto;
+                background: white;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                padding: 20mm;
+            }
+            
+            .print-controls {
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                z-index: 1000;
+                background: white;
+                padding: 1rem;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
+        }
+
+        /* Syntax highlighting styles from pdf_generator.py */
+        .codehilite {
+            background: #f8f8f8;
+            padding: 1em;
+            border-radius: 0.5em;
+            overflow-x: auto;
+        }
+        .codehilite .hll { background-color: #ffffcc }
+        .codehilite .c { color: #408080; font-style: italic }
+        .codehilite .k { color: #008000; font-weight: bold }
+        .codehilite .o { color: #666666 }
+        .codehilite .cm { color: #408080; font-style: italic }
+        .codehilite .cp { color: #BC7A00 }
+        .codehilite .c1 { color: #408080; font-style: italic }
+        .codehilite .cs { color: #408080; font-style: italic }
+        .codehilite .gd { color: #A00000 }
+        .codehilite .ge { font-style: italic }
+        .codehilite .gr { color: #FF0000 }
+        .codehilite .gh { color: #000080; font-weight: bold }
+        .codehilite .gi { color: #00A000 }
+        .codehilite .go { color: #888888 }
+        .codehilite .gp { color: #000080; font-weight: bold }
+        .codehilite .gs { font-weight: bold }
+        .codehilite .gu { color: #800080; font-weight: bold }
+        .codehilite .gt { color: #0044DD }
+        .codehilite .kc { color: #008000; font-weight: bold }
+        .codehilite .kd { color: #008000; font-weight: bold }
+        .codehilite .kn { color: #008000; font-weight: bold }
+        .codehilite .kp { color: #008000 }
+        .codehilite .kr { color: #008000; font-weight: bold }
+        .codehilite .kt { color: #B00040 }
+        .codehilite .m { color: #666666 }
+        .codehilite .s { color: #BA2121 }
+        .codehilite .na { color: #7D9029 }
+        .codehilite .nb { color: #008000 }
+        .codehilite .nc { color: #0000FF; font-weight: bold }
+        .codehilite .no { color: #880000 }
+        .codehilite .nd { color: #AA22FF }
+        .codehilite .ni { color: #999999; font-weight: bold }
+        .codehilite .ne { color: #D2413A; font-weight: bold }
+        .codehilite .nf { color: #0000FF }
+        .codehilite .nl { color: #A0A000 }
+        .codehilite .nn { color: #0000FF; font-weight: bold }
+        .codehilite .nt { color: #008000; font-weight: bold }
+        .codehilite .nv { color: #19177C }
+        .codehilite .ow { color: #AA22FF; font-weight: bold }
+        .codehilite .w { color: #bbbbbb }
+        .codehilite .mb { color: #666666 }
+        .codehilite .mf { color: #666666 }
+        .codehilite .mh { color: #666666 }
+        .codehilite .mi { color: #666666 }
+        .codehilite .mo { color: #666666 }
+        .codehilite .sb { color: #BA2121 }
+        .codehilite .sc { color: #BA2121 }
+        .codehilite .sd { color: #BA2121; font-style: italic }
+        .codehilite .s2 { color: #BA2121 }
+        .codehilite .se { color: #BB6622; font-weight: bold }
+        .codehilite .sh { color: #BA2121 }
+        .codehilite .si { color: #BB6688; font-weight: bold }
+        .codehilite .sx { color: #008000 }
+        .codehilite .sr { color: #BB6688 }
+        .codehilite .s1 { color: #BA2121 }
+        .codehilite .ss { color: #19177C }
+        .codehilite .bp { color: #008000 }
+        .codehilite .vc { color: #19177C }
+        .codehilite .vg { color: #19177C }
+        .codehilite .vi { color: #19177C }
+        .codehilite .il { color: #666666 }
+    </style>
+</head>
+<body>
+    <!-- Print Controls (hidden when printing) -->
+    <div class="print-controls no-print">
+        <h3 class="text-lg font-semibold mb-3">{{ filename }}</h3>
+        <button onclick="generatePDF()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors mb-2 w-full">
+            📄 Save as PDF
+        </button>
+        <button onclick="window.print()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors mb-2 w-full">
+            🖨️ Print/Preview
+        </button>
+        <button onclick="window.history.back()" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors w-full">
+            ← Back to Upload
+        </button>
+        <div class="text-sm text-gray-600 mt-3">
+            <p><strong>📄 Save as PDF:</strong> Opens print dialog with "{{ filename }}.pdf" pre-filled</p>
+            <p><strong>💡 Steps:</strong> 1) Select "Save as PDF" 2) Choose Downloads folder 3) Confirm filename</p>
+            <p><strong>🖨️ Print/Preview:</strong> Alternative print dialog for custom settings</p>
+        </div>
+    </div>
+
+    <!-- Page Container (A4 size on screen, full width when printing) -->
+    <div class="page-container">
+        <article class="prose {{ config.prose_size if (config.prose_size and config.prose_size.startswith('prose-')) else ('prose-' + (config.prose_size or 'lg')) }} max-w-none">
+            {{ html_content | safe }}
+        </article>
+    </div>
+
+    <script>
+        // Add keyboard shortcut for printing
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+
+        // Enhance table of contents links
+        document.addEventListener('DOMContentLoaded', function() {
+            // Find all anchor links
+            const links = document.querySelectorAll('a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href').substring(1);
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        });
+
+        // Generate and download PDF with correct filename
+        async function generatePDF() {
+            const filename = "{{ filename }}.pdf";
+            
+            // Show loading message
+            const button = event.target;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ Generating PDF...';
+            button.disabled = true;
+            
+            try {
+                // Use the browser's print API to generate PDF
+                if (window.chrome && window.chrome.webstore) {
+                    // Chrome/Edge approach - use the newer API if available
+                    try {
+                        const printOptions = {
+                            margins: {
+                                top: 0.8,
+                                bottom: 0.8,
+                                left: 0.8,
+                                right: 0.8
+                            },
+                            pageSize: 'A4',
+                            preferCSSPageSize: true
+                        };
+                        
+                        // This will trigger the browser's save dialog with suggested filename
+                        const beforePrint = () => {
+                            document.title = filename.replace('.pdf', '');
+                        };
+                        
+                        const afterPrint = () => {
+                            document.title = "{{ filename }} - Preview";
+                        };
+                        
+                        window.addEventListener('beforeprint', beforePrint);
+                        window.addEventListener('afterprint', afterPrint);
+                        
+                        // Trigger print with custom settings
+                        window.print();
+                        
+                        // Clean up event listeners
+                        setTimeout(() => {
+                            window.removeEventListener('beforeprint', beforePrint);
+                            window.removeEventListener('afterprint', afterPrint);
+                        }, 1000);
+                        
+                    } catch (error) {
+                        // Fallback to regular print
+                        window.print();
+                    }
+                } else {
+                    // Firefox/Safari approach
+                    // Set document title to suggest filename
+                    const originalTitle = document.title;
+                    document.title = filename.replace('.pdf', '');
+                    
+                    // Trigger print dialog
+                    window.print();
+                    
+                    // Restore original title after delay
+                    setTimeout(() => {
+                        document.title = originalTitle;
+                    }, 1000);
+                }
+                
+                // Show success message
+                setTimeout(() => {
+                    const successMsg = document.createElement('div');
+                    successMsg.className = 'fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded z-50';
+                    successMsg.innerHTML = `
+                        <strong>PDF Ready!</strong><br>
+                        1. Select "Save as PDF" from destination<br>
+                        2. Choose Downloads folder<br>
+                        3. Filename: "${filename}" (pre-filled)
+                    `;
+                    document.body.appendChild(successMsg);
+                    
+                    setTimeout(() => {
+                        successMsg.remove();
+                    }, 5000);
+                }, 500);
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                // Fallback to regular print
+                window.print();
+            } finally {
+                // Restore button
+                button.innerHTML = originalText;
+                button.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
