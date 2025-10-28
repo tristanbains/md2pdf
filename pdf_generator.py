@@ -54,6 +54,8 @@ class PDFGenerator:
         default_config = {
             'prose_size': 'prose',
             'prose_color': '',
+            'back_to_top_enabled': False,
+            'back_to_top_text': '↑ Top',
             'custom_classes': {
                 'a': 'text-blue-600 hover:text-blue-800',
                 'blockquote': 'border-l-4 border-gray-300 text-gray-600',
@@ -102,6 +104,10 @@ class PDFGenerator:
             self.config['prose_size'] = updates['prose_size']
         if 'prose_color' in updates:
             self.config['prose_color'] = updates['prose_color']
+        if 'back_to_top_enabled' in updates:
+            self.config['back_to_top_enabled'] = updates['back_to_top_enabled']
+        if 'back_to_top_text' in updates:
+            self.config['back_to_top_text'] = updates['back_to_top_text']
         if 'custom_classes' in updates:
             self.config['custom_classes'].update(updates['custom_classes'])
         self.save_config()

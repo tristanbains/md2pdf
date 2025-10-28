@@ -62,6 +62,31 @@
                 white-space: pre-wrap;
                 word-break: break-all;
             }
+
+            /* Back to top link - only when enabled */
+            {% if config.back_to_top_enabled %}
+            @page {
+                @bottom-right {
+                    content: "{{ config.back_to_top_text }}";
+                    font-size: 10pt;
+                    color: #3b82f6;
+                }
+            }
+
+            .back-to-top-link {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                display: block;
+                padding: 8px 16px;
+                background-color: #3b82f6;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+                font-size: 14px;
+                z-index: 1000;
+            }
+            {% endif %}
         }
         
         /* Screen-only styles */
@@ -180,10 +205,16 @@
 
     <!-- Page Container (A4 size on screen, full width when printing) -->
     <div class="page-container">
+        <div id="top"></div>
         <article class="prose {% if config.prose_color %}prose-{{ config.prose_color }}{% endif %} {{ config.prose_size if (config.prose_size and config.prose_size.startswith('prose-')) else ('prose-' + (config.prose_size or 'lg')) }} max-w-none">
             {{ html_content | safe }}
         </article>
     </div>
+
+    {% if config.back_to_top_enabled %}
+    <!-- Back to Top Link (hidden when printing) -->
+    <a href="#top" class="back-to-top-link no-print">{{ config.back_to_top_text }}</a>
+    {% endif %}
 
     <script>
         // Set up print filename handling

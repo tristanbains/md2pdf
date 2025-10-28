@@ -101,6 +101,8 @@ async def get_factory_config():
     factory_config = {
         'prose_size': 'prose',
         'prose_color': '',
+        'back_to_top_enabled': False,
+        'back_to_top_text': '↑ Top',
         'custom_classes': {
             'a': 'text-blue-600 hover:text-blue-800',
             'blockquote': 'border-l-4 border-gray-300 text-gray-600',
@@ -132,6 +134,8 @@ async def get_factory_config():
 async def update_config(
     prose_size: str = Form(...),
     prose_color: str = Form(""),
+    back_to_top_enabled: bool = Form(False),
+    back_to_top_text: str = Form("↑ Top"),
     h1_classes: str = Form(""),
     h2_classes: str = Form(""),
     h3_classes: str = Form(""),
@@ -158,6 +162,8 @@ async def update_config(
     updates = {
         "prose_size": prose_size,
         "prose_color": prose_color,
+        "back_to_top_enabled": back_to_top_enabled,
+        "back_to_top_text": back_to_top_text,
         "custom_classes": {
             "h1": h1_classes,
             "h2": h2_classes,

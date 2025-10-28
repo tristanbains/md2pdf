@@ -8,4 +8,7 @@
 - [ ] remove "save as PDF" button on preview popup
 - [ ] add save current settings button to preview popup, and ask if user wants to save to specific custom classes file
 - [ ] add a factory settings config file
+- [ ] optional back to top on each page
+- [ ] file name not preview suffix
+- [ ] choose font
 

@@ -110,6 +110,30 @@
                         </div>
                     </div>
 
+                    <!-- Back to Top Settings -->
+                    <div class="divider">Back to Top Link</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div class="form-control">
+                            <label class="label cursor-pointer">
+                                <span class="label-text font-semibold">Enable "Back to Top" link on each page</span>
+                                <input type="checkbox" name="back_to_top_enabled" id="backToTopEnabled"
+                                       {% if config.back_to_top_enabled %}checked{% endif %}
+                                       class="checkbox checkbox-primary" />
+                            </label>
+                            <label class="label">
+                                <span class="label-text-alt">Shows a link in bottom-right corner of each printed page</span>
+                            </label>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Link Text</span>
+                            </label>
+                            <input type="text" name="back_to_top_text" id="backToTopText" value="{{ config.back_to_top_text or '↑ Top' }}"
+                                   placeholder="↑ Top" class="input input-bordered w-full" />
+                        </div>
+                    </div>
+
                     <!-- Custom Classes (COMPACT 3-COLUMN GRID) -->
                     <div class="divider">Element Styling (Tailwind Classes)</div>
 
@@ -402,7 +426,13 @@
         function checkForChanges() {
             const proseSize = document.getElementById('proseSize').value;
             const proseColor = document.getElementById('proseColor').value.trim();
-            let hasChanges = proseSize !== savedConfig.prose_size || proseColor !== (savedConfig.prose_color || '');
+            const backToTopEnabled = document.getElementById('backToTopEnabled').checked;
+            const backToTopText = document.getElementById('backToTopText').value.trim();
+
+            let hasChanges = proseSize !== savedConfig.prose_size ||
+                           proseColor !== (savedConfig.prose_color || '') ||
+                           backToTopEnabled !== (savedConfig.back_to_top_enabled || false) ||
+                           backToTopText !== (savedConfig.back_to_top_text || '↑ Top');
 
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -465,6 +495,8 @@
             const config = {
                 prose_size: document.getElementById('proseSize').value,
                 prose_color: document.getElementById('proseColor').value.trim(),
+                back_to_top_enabled: document.getElementById('backToTopEnabled').checked,
+                back_to_top_text: document.getElementById('backToTopText').value.trim(),
                 custom_classes: {},
                 pdf_options: savedConfig.pdf_options || {}
             };
@@ -499,11 +531,21 @@
             checkForChanges();
         });
 
+        document.getElementById('backToTopEnabled').addEventListener('change', () => {
+            checkForChanges();
+        });
+
+        document.getElementById('backToTopText').addEventListener('input', () => {
+            checkForChanges();
+        });
+
         // Revert button handler
         revertBtn.addEventListener('click', () => {
             // Reload form with saved config
             document.getElementById('proseSize').value = savedConfig.prose_size;
             document.getElementById('proseColor').value = savedConfig.prose_color || '';
+            document.getElementById('backToTopEnabled').checked = savedConfig.back_to_top_enabled || false;
+            document.getElementById('backToTopText').value = savedConfig.back_to_top_text || '↑ Top';
 
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -533,6 +575,8 @@
                 // Update form with factory defaults
                 document.getElementById('proseSize').value = factoryConfig.prose_size;
                 document.getElementById('proseColor').value = factoryConfig.prose_color || '';
+                document.getElementById('backToTopEnabled').checked = factoryConfig.back_to_top_enabled || false;
+                document.getElementById('backToTopText').value = factoryConfig.back_to_top_text || '↑ Top';
 
                 fieldNames.forEach(fieldName => {
                     const input = document.getElementById(fieldName);
