@@ -103,34 +103,10 @@
                                 <span class="label-text font-semibold">Prose Color</span>
                             </label>
                             <input type="text" name="prose_color" id="proseColor" value="{{ config.prose_color or '' }}"
-                                   placeholder="zinc, slate, gray, etc." class="input input-bordered w-full" />
+                                   placeholder="prose-slate" class="input input-bordered w-full" />
                             <label class="label">
-                                <span class="label-text-alt">Examples: zinc, slate, gray, neutral, stone, red, orange, etc.</span>
+                                <span class="label-text-alt">Enter a Tailwind prose color class (e.g., prose-slate, prose-zinc, prose-gray)</span>
                             </label>
-                        </div>
-                    </div>
-
-                    <!-- Back to Top Settings -->
-                    <div class="divider">Back to Top Link</div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div class="form-control">
-                            <label class="label cursor-pointer">
-                                <span class="label-text font-semibold">Enable "Back to Top" link on each page</span>
-                                <input type="checkbox" name="back_to_top_enabled" id="backToTopEnabled"
-                                       {% if config.back_to_top_enabled %}checked{% endif %}
-                                       class="checkbox checkbox-primary" />
-                            </label>
-                            <label class="label">
-                                <span class="label-text-alt">Shows a link in bottom-right corner of each printed page</span>
-                            </label>
-                        </div>
-
-                        <div class="form-control">
-                            <label class="label">
-                                <span class="label-text font-semibold">Link Text</span>
-                            </label>
-                            <input type="text" name="back_to_top_text" id="backToTopText" value="{{ config.back_to_top_text or '↑ Top' }}"
-                                   placeholder="↑ Top" class="input input-bordered w-full" />
                         </div>
                     </div>
 
@@ -143,7 +119,7 @@
                                 <span class="label-text text-sm">H1</span>
                             </label>
                             <input type="text" name="h1_classes" id="h1_classes" value="{{ config.custom_classes.h1 }}"
-                                   placeholder="text-gray-900 font-bold" class="input input-bordered input-sm w-full" />
+                                   placeholder="font-bold text-4xl" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -151,7 +127,7 @@
                                 <span class="label-text text-sm">H2</span>
                             </label>
                             <input type="text" name="h2_classes" id="h2_classes" value="{{ config.custom_classes.h2 }}"
-                                   placeholder="text-gray-800 font-semibold" class="input input-bordered input-sm w-full" />
+                                   placeholder="font-semibold text-3xl" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -159,7 +135,7 @@
                                 <span class="label-text text-sm">H3</span>
                             </label>
                             <input type="text" name="h3_classes" id="h3_classes" value="{{ config.custom_classes.h3 }}"
-                                   placeholder="text-gray-700 font-medium" class="input input-bordered input-sm w-full" />
+                                   placeholder="font-medium text-2xl" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -167,7 +143,7 @@
                                 <span class="label-text text-sm">H4</span>
                             </label>
                             <input type="text" name="h4_classes" id="h4_classes" value="{{ config.custom_classes.h4 }}"
-                                   placeholder="text-gray-600" class="input input-bordered input-sm w-full" />
+                                   placeholder="font-medium text-xl" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -175,7 +151,7 @@
                                 <span class="label-text text-sm">H5</span>
                             </label>
                             <input type="text" name="h5_classes" id="h5_classes" value="{{ config.custom_classes.h5 }}"
-                                   placeholder="text-gray-600" class="input input-bordered input-sm w-full" />
+                                   placeholder="font-medium text-lg" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -183,7 +159,7 @@
                                 <span class="label-text text-sm">H6</span>
                             </label>
                             <input type="text" name="h6_classes" id="h6_classes" value="{{ config.custom_classes.h6 }}"
-                                   placeholder="text-gray-600" class="input input-bordered input-sm w-full" />
+                                   placeholder="font-medium" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -191,7 +167,7 @@
                                 <span class="label-text text-sm">Paragraph</span>
                             </label>
                             <input type="text" name="p_classes" id="p_classes" value="{{ config.custom_classes.p }}"
-                                   placeholder="text-gray-800" class="input input-bordered input-sm w-full" />
+                                   placeholder="leading-7" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -199,7 +175,7 @@
                                 <span class="label-text text-sm">Links</span>
                             </label>
                             <input type="text" name="a_classes" id="a_classes" value="{{ config.custom_classes.a }}"
-                                   placeholder="text-blue-600 hover:text-blue-800" class="input input-bordered input-sm w-full" />
+                                   placeholder="underline hover:no-underline" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -207,7 +183,7 @@
                                 <span class="label-text text-sm">Code Block</span>
                             </label>
                             <input type="text" name="pre_classes" id="pre_classes" value="{{ config.custom_classes.pre }}"
-                                   placeholder="bg-gray-50 border border-gray-200" class="input input-bordered input-sm w-full" />
+                                   placeholder="rounded-lg p-4" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -215,7 +191,7 @@
                                 <span class="label-text text-sm">Inline Code</span>
                             </label>
                             <input type="text" name="code_classes" id="code_classes" value="{{ config.custom_classes.code }}"
-                                   placeholder="bg-gray-100 text-red-600" class="input input-bordered input-sm w-full" />
+                                   placeholder="rounded px-1 py-0.5" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -223,7 +199,7 @@
                                 <span class="label-text text-sm">Blockquote</span>
                             </label>
                             <input type="text" name="blockquote_classes" id="blockquote_classes" value="{{ config.custom_classes.blockquote }}"
-                                   placeholder="border-l-4 border-gray-300 text-gray-600" class="input input-bordered input-sm w-full" />
+                                   placeholder="border-l-4 pl-4 italic" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -231,7 +207,7 @@
                                 <span class="label-text text-sm">Table</span>
                             </label>
                             <input type="text" name="table_classes" id="table_classes" value="{{ config.custom_classes.table }}"
-                                   placeholder="border border-gray-200" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -239,7 +215,7 @@
                                 <span class="label-text text-sm">Table Head (thead)</span>
                             </label>
                             <input type="text" name="thead_classes" id="thead_classes" value="{{ config.custom_classes.thead }}"
-                                   placeholder="bg-gray-50" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -255,7 +231,7 @@
                                 <span class="label-text text-sm">Table Row (tr)</span>
                             </label>
                             <input type="text" name="tr_classes" id="tr_classes" value="{{ config.custom_classes.tr }}"
-                                   placeholder="hover:bg-gray-50" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -263,7 +239,7 @@
                                 <span class="label-text text-sm">Table Cell (td)</span>
                             </label>
                             <input type="text" name="td_classes" id="td_classes" value="{{ config.custom_classes.td }}"
-                                   placeholder="border border-gray-200 px-4 py-2" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -271,7 +247,7 @@
                                 <span class="label-text text-sm">Table Header (th)</span>
                             </label>
                             <input type="text" name="th_classes" id="th_classes" value="{{ config.custom_classes.th }}"
-                                   placeholder="border border-gray-200 px-4 py-2 font-semibold bg-gray-50" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -279,7 +255,7 @@
                                 <span class="label-text text-sm">Unordered List</span>
                             </label>
                             <input type="text" name="ul_classes" id="ul_classes" value="{{ config.custom_classes.ul }}"
-                                   placeholder="list-disc" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -287,7 +263,7 @@
                                 <span class="label-text text-sm">Ordered List</span>
                             </label>
                             <input type="text" name="ol_classes" id="ol_classes" value="{{ config.custom_classes.ol }}"
-                                   placeholder="list-decimal" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -295,7 +271,7 @@
                                 <span class="label-text text-sm">List Item</span>
                             </label>
                             <input type="text" name="li_classes" id="li_classes" value="{{ config.custom_classes.li }}"
-                                   placeholder="mb-1" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -303,7 +279,7 @@
                                 <span class="label-text text-sm">Horizontal Rule</span>
                             </label>
                             <input type="text" name="hr_classes" id="hr_classes" value="{{ config.custom_classes.hr }}"
-                                   placeholder="border-gray-300" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
 
                         <div class="form-control">
@@ -311,7 +287,7 @@
                                 <span class="label-text text-sm">Image</span>
                             </label>
                             <input type="text" name="img_classes" id="img_classes" value="{{ config.custom_classes.img }}"
-                                   placeholder="rounded shadow" class="input input-bordered input-sm w-full" />
+                                   placeholder="" class="input input-bordered input-sm w-full" />
                         </div>
                     </div>
 
@@ -334,6 +310,11 @@
                             </svg>
                             Factory Reset
                         </button>
+                    </div>
+
+                    <div class="mt-4 text-sm text-base-content/70">
+                        <p>📚 Browse available Tailwind CSS classes: <a href="https://tailwindcss.com/docs" target="_blank" rel="noopener noreferrer" class="link link-primary">Tailwind Documentation</a></p>
+                        <p>🎨 For prose colors and typography: <a href="https://tailwindcss.com/docs/typography-plugin" target="_blank" rel="noopener noreferrer" class="link link-primary">Typography Plugin</a></p>
                     </div>
                 </form>
             </div>
@@ -426,13 +407,9 @@
         function checkForChanges() {
             const proseSize = document.getElementById('proseSize').value;
             const proseColor = document.getElementById('proseColor').value.trim();
-            const backToTopEnabled = document.getElementById('backToTopEnabled').checked;
-            const backToTopText = document.getElementById('backToTopText').value.trim();
 
             let hasChanges = proseSize !== savedConfig.prose_size ||
-                           proseColor !== (savedConfig.prose_color || '') ||
-                           backToTopEnabled !== (savedConfig.back_to_top_enabled || false) ||
-                           backToTopText !== (savedConfig.back_to_top_text || '↑ Top');
+                           proseColor !== (savedConfig.prose_color || '');
 
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -480,13 +457,22 @@
                 }
             });
 
-            // Check prose size too
+            // Check prose size
             const proseSize = document.getElementById('proseSize');
             proseSize.classList.remove('input-synced', 'input-modified');
             if (proseSize.value === savedConfig.prose_size) {
                 proseSize.classList.add('input-synced');
             } else {
                 proseSize.classList.add('input-modified');
+            }
+
+            // Check prose color
+            const proseColor = document.getElementById('proseColor');
+            proseColor.classList.remove('input-synced', 'input-modified');
+            if (proseColor.value.trim() === (savedConfig.prose_color || '')) {
+                proseColor.classList.add('input-synced');
+            } else {
+                proseColor.classList.add('input-modified');
             }
         }
 
@@ -495,8 +481,6 @@
             const config = {
                 prose_size: document.getElementById('proseSize').value,
                 prose_color: document.getElementById('proseColor').value.trim(),
-                back_to_top_enabled: document.getElementById('backToTopEnabled').checked,
-                back_to_top_text: document.getElementById('backToTopText').value.trim(),
                 custom_classes: {},
                 pdf_options: savedConfig.pdf_options || {}
             };
@@ -528,14 +512,7 @@
         });
 
         document.getElementById('proseColor').addEventListener('input', () => {
-            checkForChanges();
-        });
-
-        document.getElementById('backToTopEnabled').addEventListener('change', () => {
-            checkForChanges();
-        });
-
-        document.getElementById('backToTopText').addEventListener('input', () => {
+            updateAllFieldIndicators();
             checkForChanges();
         });
 
@@ -544,8 +521,6 @@
             // Reload form with saved config
             document.getElementById('proseSize').value = savedConfig.prose_size;
             document.getElementById('proseColor').value = savedConfig.prose_color || '';
-            document.getElementById('backToTopEnabled').checked = savedConfig.back_to_top_enabled || false;
-            document.getElementById('backToTopText').value = savedConfig.back_to_top_text || '↑ Top';
 
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -575,8 +550,6 @@
                 // Update form with factory defaults
                 document.getElementById('proseSize').value = factoryConfig.prose_size;
                 document.getElementById('proseColor').value = factoryConfig.prose_color || '';
-                document.getElementById('backToTopEnabled').checked = factoryConfig.back_to_top_enabled || false;
-                document.getElementById('backToTopText').value = factoryConfig.back_to_top_text || '↑ Top';
 
                 fieldNames.forEach(fieldName => {
                     const input = document.getElementById(fieldName);

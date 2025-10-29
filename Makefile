@@ -1,4 +1,4 @@
-.PHONY: restart build clean install-deps dev
+.PHONY: restart build clean install-deps dev git-quick
 
 # Development: restart server and open browser
 restart:
@@ -23,7 +23,7 @@ install-deps:
 # Build macOS .app bundle
 build:
 	@echo "📦 Building MD2PDF.app..."
-	python setup.py py2app
+	uv run python setup.py py2app
 	@echo "✅ Build complete! App located at: dist/MD2PDF.app"
 
 # Clean build artifacts
@@ -31,3 +31,17 @@ clean:
 	@echo "🧹 Cleaning build artifacts..."
 	rm -rf build dist
 	@echo "✅ Clean complete!"
+
+# Quick git: add, commit, and push
+git-quick:
+	@if [ -z "$(m)" ]; then \
+		echo "❌ Error: Commit message required. Usage: make git-quick m=\"your message\""; \
+		exit 1; \
+	fi
+	@echo "📝 Adding all files..."
+	@git add .
+	@echo "💾 Committing with message: $(m)"
+	@git commit -m "$(m)"
+	@echo "🚀 Pushing to remote..."
+	@git push
+	@echo "✅ Done!"

@@ -49,35 +49,34 @@ class PDFGenerator:
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
 
-    def _create_default_config(self, path: str):
-        """Create default config with academic preset"""
-        default_config = {
+    @staticmethod
+    def get_default_config():
+        """Return default config structure"""
+        return {
             'prose_size': 'prose',
             'prose_color': '',
-            'back_to_top_enabled': False,
-            'back_to_top_text': '↑ Top',
             'custom_classes': {
-                'a': 'text-blue-600 hover:text-blue-800',
-                'blockquote': 'border-l-4 border-gray-300 text-gray-600',
-                'code': 'bg-gray-100 text-red-600',
-                'h1': 'text-gray-900 font-bold',
-                'h2': 'text-gray-800 font-semibold',
-                'h3': 'text-gray-700 font-medium',
-                'h4': 'text-gray-600',
-                'h5': 'text-gray-600',
-                'h6': 'text-gray-600',
+                'a': '',
+                'blockquote': '',
+                'code': '',
+                'h1': '',
+                'h2': '',
+                'h3': '',
+                'h4': '',
+                'h5': '',
+                'h6': '',
                 'hr': '',
                 'img': '',
                 'li': '',
                 'ol': '',
-                'p': 'text-gray-800',
-                'pre': 'bg-gray-50 border border-gray-200',
-                'table': 'border border-gray-200',
+                'p': '',
+                'pre': '',
+                'table': '',
                 'thead': '',
                 'tbody': '',
                 'tr': '',
-                'td': 'border border-gray-200 px-4 py-2',
-                'th': 'border border-gray-200 px-4 py-2 font-semibold bg-gray-50',
+                'td': '',
+                'th': '',
                 'ul': ''
             },
             'pdf_options': {
@@ -90,6 +89,9 @@ class PDFGenerator:
             }
         }
 
+    def _create_default_config(self, path: str):
+        """Create default config file with academic preset"""
+        default_config = self.get_default_config()
         with open(path, 'w') as f:
             yaml.dump(default_config, f, default_flow_style=False)
 
@@ -104,10 +106,6 @@ class PDFGenerator:
             self.config['prose_size'] = updates['prose_size']
         if 'prose_color' in updates:
             self.config['prose_color'] = updates['prose_color']
-        if 'back_to_top_enabled' in updates:
-            self.config['back_to_top_enabled'] = updates['back_to_top_enabled']
-        if 'back_to_top_text' in updates:
-            self.config['back_to_top_text'] = updates['back_to_top_text']
         if 'custom_classes' in updates:
             self.config['custom_classes'].update(updates['custom_classes'])
         self.save_config()
@@ -183,75 +181,11 @@ class PDFGenerator:
     <style>
         @page {{
             size: {self.config['pdf_options']['format']};
-            margin: {self.config['pdf_options']['margin_top']} 
-                    {self.config['pdf_options']['margin_right']} 
-                    {self.config['pdf_options']['margin_bottom']} 
+            margin: {self.config['pdf_options']['margin_top']}
+                    {self.config['pdf_options']['margin_right']}
+                    {self.config['pdf_options']['margin_bottom']}
                     {self.config['pdf_options']['margin_left']};
         }}
-        
-        /* Syntax highlighting styles */
-        .codehilite {{ background: #f8f8f8; padding: 1em; border-radius: 0.5em; overflow-x: auto; }}
-        .codehilite .hll {{ background-color: #ffffcc }}
-        .codehilite .c {{ color: #408080; font-style: italic }}
-        .codehilite .k {{ color: #008000; font-weight: bold }}
-        .codehilite .o {{ color: #666666 }}
-        .codehilite .cm {{ color: #408080; font-style: italic }}
-        .codehilite .cp {{ color: #BC7A00 }}
-        .codehilite .c1 {{ color: #408080; font-style: italic }}
-        .codehilite .cs {{ color: #408080; font-style: italic }}
-        .codehilite .gd {{ color: #A00000 }}
-        .codehilite .ge {{ font-style: italic }}
-        .codehilite .gr {{ color: #FF0000 }}
-        .codehilite .gh {{ color: #000080; font-weight: bold }}
-        .codehilite .gi {{ color: #00A000 }}
-        .codehilite .go {{ color: #888888 }}
-        .codehilite .gp {{ color: #000080; font-weight: bold }}
-        .codehilite .gs {{ font-weight: bold }}
-        .codehilite .gu {{ color: #800080; font-weight: bold }}
-        .codehilite .gt {{ color: #0044DD }}
-        .codehilite .kc {{ color: #008000; font-weight: bold }}
-        .codehilite .kd {{ color: #008000; font-weight: bold }}
-        .codehilite .kn {{ color: #008000; font-weight: bold }}
-        .codehilite .kp {{ color: #008000 }}
-        .codehilite .kr {{ color: #008000; font-weight: bold }}
-        .codehilite .kt {{ color: #B00040 }}
-        .codehilite .m {{ color: #666666 }}
-        .codehilite .s {{ color: #BA2121 }}
-        .codehilite .na {{ color: #7D9029 }}
-        .codehilite .nb {{ color: #008000 }}
-        .codehilite .nc {{ color: #0000FF; font-weight: bold }}
-        .codehilite .no {{ color: #880000 }}
-        .codehilite .nd {{ color: #AA22FF }}
-        .codehilite .ni {{ color: #999999; font-weight: bold }}
-        .codehilite .ne {{ color: #D2413A; font-weight: bold }}
-        .codehilite .nf {{ color: #0000FF }}
-        .codehilite .nl {{ color: #A0A000 }}
-        .codehilite .nn {{ color: #0000FF; font-weight: bold }}
-        .codehilite .nt {{ color: #008000; font-weight: bold }}
-        .codehilite .nv {{ color: #19177C }}
-        .codehilite .ow {{ color: #AA22FF; font-weight: bold }}
-        .codehilite .w {{ color: #bbbbbb }}
-        .codehilite .mb {{ color: #666666 }}
-        .codehilite .mf {{ color: #666666 }}
-        .codehilite .mh {{ color: #666666 }}
-        .codehilite .mi {{ color: #666666 }}
-        .codehilite .mo {{ color: #666666 }}
-        .codehilite .sb {{ color: #BA2121 }}
-        .codehilite .sc {{ color: #BA2121 }}
-        .codehilite .sd {{ color: #BA2121; font-style: italic }}
-        .codehilite .s2 {{ color: #BA2121 }}
-        .codehilite .se {{ color: #BB6622; font-weight: bold }}
-        .codehilite .sh {{ color: #BA2121 }}
-        .codehilite .si {{ color: #BB6688; font-weight: bold }}
-        .codehilite .sx {{ color: #008000 }}
-        .codehilite .sr {{ color: #BB6688 }}
-        .codehilite .s1 {{ color: #BA2121 }}
-        .codehilite .ss {{ color: #19177C }}
-        .codehilite .bp {{ color: #008000 }}
-        .codehilite .vc {{ color: #19177C }}
-        .codehilite .vg {{ color: #19177C }}
-        .codehilite .vi {{ color: #19177C }}
-        .codehilite .il {{ color: #666666 }}
     </style>
 </head>
 <body class="bg-white">

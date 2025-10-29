@@ -18,20 +18,16 @@ templates = Jinja2Templates(directory="templates")
 
 # File storage configuration
 UPLOAD_DIR = "temp_uploads"
-FILE_EXPIRY_HOURS = 24
 
 def cleanup_old_files():
-    """Remove files older than FILE_EXPIRY_HOURS"""
+    """Remove all files from temp_uploads to keep only the most recent upload"""
     if not os.path.exists(UPLOAD_DIR):
         return
-    
-    cutoff_time = datetime.now() - timedelta(hours=FILE_EXPIRY_HOURS)
+
     for filename in os.listdir(UPLOAD_DIR):
         file_path = os.path.join(UPLOAD_DIR, filename)
         if os.path.isfile(file_path):
-            file_time = datetime.fromtimestamp(os.path.getctime(file_path))
-            if file_time < cutoff_time:
-                os.remove(file_path)
+            os.remove(file_path)
 
 def save_uploaded_file(content: bytes, original_filename: str) -> str:
     """Save uploaded file and return unique file_id"""
@@ -98,44 +94,18 @@ async def get_config():
 @app.get("/api/config/factory-reset")
 async def get_factory_config():
     """Return factory default configuration"""
-    factory_config = {
-        'prose_size': 'prose',
-        'prose_color': '',
-        'back_to_top_enabled': False,
-        'back_to_top_text': '↑ Top',
-        'custom_classes': {
-            'a': 'text-blue-600 hover:text-blue-800',
-            'blockquote': 'border-l-4 border-gray-300 text-gray-600',
-            'code': 'bg-gray-100 text-red-600',
-            'h1': 'text-gray-900 font-bold',
-            'h2': 'text-gray-800 font-semibold',
-            'h3': 'text-gray-700 font-medium',
-            'h4': 'text-gray-600',
-            'h5': 'text-gray-600',
-            'h6': 'text-gray-600',
-            'hr': '',
-            'img': '',
-            'li': '',
-            'ol': '',
-            'p': 'text-gray-800',
-            'pre': 'bg-gray-50 border border-gray-200',
-            'table': 'border border-gray-200',
-            'thead': '',
-            'tbody': '',
-            'tr': '',
-            'td': 'border border-gray-200 px-4 py-2',
-            'th': 'border border-gray-200 px-4 py-2 font-semibold bg-gray-50',
-            'ul': ''
-        }
+    full_config = PDFGenerator.get_default_config()
+    # Return only the fields used by the frontend (exclude pdf_options)
+    return {
+        'prose_size': full_config['prose_size'],
+        'prose_color': full_config['prose_color'],
+        'custom_classes': full_config['custom_classes']
     }
-    return factory_config
 
 @app.post("/api/config")
 async def update_config(
     prose_size: str = Form(...),
     prose_color: str = Form(""),
-    back_to_top_enabled: bool = Form(False),
-    back_to_top_text: str = Form("↑ Top"),
     h1_classes: str = Form(""),
     h2_classes: str = Form(""),
     h3_classes: str = Form(""),
@@ -162,8 +132,6 @@ async def update_config(
     updates = {
         "prose_size": prose_size,
         "prose_color": prose_color,
-        "back_to_top_enabled": back_to_top_enabled,
-        "back_to_top_text": back_to_top_text,
         "custom_classes": {
             "h1": h1_classes,
             "h2": h2_classes,

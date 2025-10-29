@@ -1,14 +1,6 @@
 - [ ] simplify and refactor code base
-- [ ] prose sizes
-- [ ] prose colors like prosee-zinc prose-slate
 - [ ] auto save settings when changed
-- [ ] sensible defaults for tailwind classes, presets
 - [ ] multiple settings files, and refer to them for different report styles
-- [ ] table padding etc inside table elements, rows, etc.
-- [ ] remove "save as PDF" button on preview popup
 - [ ] add save current settings button to preview popup, and ask if user wants to save to specific custom classes file
-- [ ] add a factory settings config file
-- [ ] optional back to top on each page
-- [ ] file name not preview suffix
 - [ ] choose font
 

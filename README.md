@@ -49,7 +49,7 @@ uv sync
 ## Verify Installation
 After installing system dependencies and Python packages, verify:
 ```bash
-python -c "import weasyprint; print('WeasyPrint installed successfully')"
+uv run python -c "import weasyprint; print('WeasyPrint installed successfully')"
 ```
 
 ## Alternative PDF Libraries (if WeasyPrint fails)
