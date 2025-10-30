@@ -247,7 +247,7 @@ async def preview_markdown(request: Request, file_id: str):
         return HTMLResponse(f"<h1>Error</h1><p>Failed to load preview: {str(e)}</p>", status_code=500)
 
 @app.get("/theme-preview", response_class=HTMLResponse)
-async def theme_preview(request: Request):
+async def theme_preview(request: Request, current: Optional[str] = None):
     """Display all available Pygments themes with sample code"""
     pdf_gen = PDFGenerator()
 
@@ -279,7 +279,8 @@ async def theme_preview(request: Request):
         {
             "request": request,
             "themes": themes_with_css,
-            "sample_code": sample_code
+            "sample_code": sample_code,
+            "current_theme": current
         }
     )
 

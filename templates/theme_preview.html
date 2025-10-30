@@ -10,6 +10,7 @@
             cursor: pointer;
             transition: all 0.3s ease;
             border: 2px solid transparent;
+            position: relative;
         }
         .theme-card:hover {
             border-color: #3b82f6;
@@ -19,6 +20,48 @@
         .theme-card.selected {
             border-color: #10b981;
             background-color: #f0fdf4;
+        }
+
+        /* Theme badge hover states */
+        .theme-badge {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            transition: opacity 0.2s ease;
+        }
+
+        /* Non-current theme: hide badge by default, show "SELECT" on hover */
+        .theme-card:not(.selected) .theme-badge {
+            opacity: 0;
+            background-color: #dbeafe;
+            color: #2563eb;
+        }
+        .theme-card:not(.selected):hover .theme-badge {
+            opacity: 1;
+        }
+
+        /* Current theme: show "CURRENT" by default */
+        .theme-card.selected .theme-badge-current {
+            display: inline;
+            background-color: #dcfce7;
+            color: #16a34a;
+        }
+        .theme-card.selected .theme-badge-hover {
+            display: none;
+            background-color: #dcfce7;
+            color: #16a34a;
+        }
+
+        /* Current theme on hover: hide "CURRENT", show "KEEP CURRENT" */
+        .theme-card.selected:hover .theme-badge-current {
+            display: none;
+        }
+        .theme-card.selected:hover .theme-badge-hover {
+            display: inline;
         }
 
         /* Preserve code formatting with proper whitespace */
@@ -51,9 +94,15 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for theme_name in themes.keys() | sort %}
-            <div class="theme-card bg-white rounded-lg shadow-md p-4"
+            <div class="theme-card{% if theme_name == current_theme %} selected{% endif %} bg-white rounded-lg shadow-md p-4"
                  data-theme="{{ theme_name }}"
                  onclick="selectTheme('{{ theme_name }}')">
+                {% if theme_name == current_theme %}
+                <span class="theme-badge theme-badge-current">CURRENT</span>
+                <span class="theme-badge theme-badge-hover">KEEP CURRENT</span>
+                {% else %}
+                <span class="theme-badge">SELECT</span>
+                {% endif %}
                 <h2 class="text-lg font-bold text-gray-800 mb-2 capitalize">
                     {{ theme_name | replace('_', ' ') | replace('-', ' ') }}
                 </h2>
@@ -119,6 +168,14 @@ print(fibonacci(10))</code></pre>
                 alert(`Selected theme: ${themeName}\n\nNote: This window was not opened from the main page, so the selection cannot be sent back.`);
             }
         }
+
+        // Auto-scroll to currently selected theme on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const selectedCard = document.querySelector('.theme-card.selected');
+            if (selectedCard) {
+                selectedCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
 
         // Add keyboard navigation
         document.addEventListener('keydown', (e) => {
