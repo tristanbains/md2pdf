@@ -113,23 +113,9 @@
 {{ sample_code | safe }}
                     </div>
                 </div>
-
-                <!-- <button class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-4 rounded transition-colors">
-                    Select {{ theme_name | replace('_', ' ') }}
-                </button> -->
             </div>
             {% endfor %}
         </div>
-
-        <!-- <div class="mt-8 bg-white rounded-lg shadow-md p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-2">Sample Code Used Above:</h3>
-            <pre class="bg-gray-50 p-4 rounded text-sm overflow-x-auto"><code>def fibonacci(n):
-    if n <= 1:
-        return n
-    return fibonacci(n-1) + fibonacci(n-2)
-
-print(fibonacci(10))</code></pre>
-        </div> -->
 
         <div class="mt-4 text-center">
             <button onclick="window.close()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded transition-colors">
@@ -140,19 +126,11 @@ print(fibonacci(10))</code></pre>
 
     <script>
         function selectTheme(themeName) {
-            // console.log('=== THEME PREVIEW DEBUG ===');
-            // console.log('1. Theme name:', themeName);
-            // console.log('2. window.opener exists:', !!window.opener);
-            // console.log('3. window.opener:', window.opener);
-
-            // Send theme selection to parent window
             if (window.opener) {
-                console.log('4. Sending postMessage...');
                 window.opener.postMessage({
                     type: 'theme-selected',
                     theme: themeName
                 }, '*');
-                console.log('5. postMessage sent');
 
                 // Highlight selected card briefly before closing
                 document.querySelectorAll('.theme-card').forEach(card => {

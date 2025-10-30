@@ -448,14 +448,12 @@
         let savedConfig = {};
         let hasUnsavedChanges = false;
 
-        // Field names for tracking
         const fieldNames = ['h1_classes', 'h2_classes', 'h3_classes', 'h4_classes', 'h5_classes', 'h6_classes',
                            'p_classes', 'a_classes', 'code_classes', 'pre_classes', 'blockquote_classes',
                            'table_classes', 'thead_classes', 'tbody_classes', 'tr_classes', 'td_classes', 'th_classes',
                            'ul_classes', 'ol_classes', 'li_classes', 'hr_classes', 'img_classes',
                            'codehilite_auto_bg', 'codehilite_custom_bg', 'codehilite_wrapper_classes'];
 
-        // Load saved config on page load
         async function loadSavedConfig() {
             try {
                 const response = await fetch('/api/config');
@@ -466,7 +464,6 @@
             }
         }
 
-        // Compare current form values with saved config
         function checkForChanges() {
             const proseSize = document.getElementById('proseSize').value;
             const proseColor = document.getElementById('proseColor').value.trim();
@@ -507,7 +504,6 @@
             }
         }
 
-        // Update visual indicator for a single field
         function updateFieldIndicator(inputElement, fieldName) {
             const elementName = fieldName.replace('_classes', '');
             const savedValue = savedConfig.custom_classes?.[elementName] || '';
@@ -522,7 +518,6 @@
             }
         }
 
-        // Update all field indicators
         function updateAllFieldIndicators() {
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -667,32 +662,11 @@
             window.open(`/theme-preview?current=${encodeURIComponent(currentTheme)}`, 'themePreview', 'width=1400,height=900,scrollbars=yes,resizable=yes');
         }
 
-        // Listen for theme selection from preview window
         window.addEventListener('message', (event) => {
-            // Accept messages from any origin for the theme preview
             if (event.data && event.data.type === 'theme-selected') {
                 const selectedTheme = event.data.theme;
-
-                console.log('=== THEME SELECTION DEBUG ===');
-                console.log('1. Received event.data:', event.data);
-                console.log('2. Selected theme:', selectedTheme);
-                console.log('3. Theme type:', typeof selectedTheme);
-
-                // Update the dropdown (theme names already in correct format from Pygments)
                 const themeSelect = document.getElementById('codehilite_theme');
-                console.log('4. Dropdown element exists:', !!themeSelect);
-                console.log('5. Dropdown value BEFORE:', themeSelect?.value);
-                console.log('6. All dropdown options:', Array.from(themeSelect?.options || []).map(o => `"${o.value}"`).join(', '));
-
                 themeSelect.value = selectedTheme;
-
-                console.log('7. Dropdown value AFTER:', themeSelect.value);
-                console.log('8. Selected option text:', themeSelect.selectedOptions[0]?.text || 'NONE');
-                console.log('9. Match found:', themeSelect.value === selectedTheme);
-                console.log('10. Dropdown value is empty:', themeSelect.value === '');
-                console.log('=== END DEBUG ===');
-
-                // Trigger change detection
                 checkForChanges();
 
                 // Show notification

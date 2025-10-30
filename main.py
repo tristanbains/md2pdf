@@ -16,7 +16,6 @@ app = FastAPI(title="Markdown to PDF Converter")
 
 templates = Jinja2Templates(directory="templates")
 
-# File storage configuration
 UPLOAD_DIR = "temp_uploads"
 
 def cleanup_old_files():
@@ -37,15 +36,12 @@ def save_uploaded_file(content: bytes, original_filename: str) -> str:
     file_extension = Path(original_filename).suffix
     stored_filename = f"{file_id}{file_extension}"
     file_path = os.path.join(UPLOAD_DIR, stored_filename)
-    
-    # Also save original filename mapping
     metadata_path = os.path.join(UPLOAD_DIR, f"{file_id}.meta")
     
     os.makedirs(UPLOAD_DIR, exist_ok=True)
     with open(file_path, 'wb') as f:
         f.write(content)
-    
-    # Save original filename in metadata file
+
     with open(metadata_path, 'w') as f:
         f.write(original_filename)
     
@@ -53,22 +49,19 @@ def save_uploaded_file(content: bytes, original_filename: str) -> str:
 
 def get_file_content(file_id: str) -> tuple[str, str]:
     """Get file content and original filename by file_id"""
-    # Try to get original filename from metadata
     metadata_path = os.path.join(UPLOAD_DIR, f"{file_id}.meta")
     original_filename = None
-    
+
     if os.path.exists(metadata_path):
         with open(metadata_path, 'r') as f:
             original_filename = f.read().strip()
-    
-    # Find the content file
+
     for filename in os.listdir(UPLOAD_DIR):
         if filename.startswith(file_id) and not filename.endswith(('.meta', '.tempconfig')):
             file_path = os.path.join(UPLOAD_DIR, filename)
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            # Use original filename if available, otherwise use stored filename
             display_filename = original_filename if original_filename else filename
             return content, display_filename
     
@@ -76,7 +69,6 @@ def get_file_content(file_id: str) -> tuple[str, str]:
 
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
-    # Create PDFGenerator only for loading config
     pdf_gen = PDFGenerator()
     available_themes = pdf_gen.get_available_themes()
     return templates.TemplateResponse(
@@ -97,7 +89,6 @@ async def get_config():
 async def get_factory_config():
     """Return factory default configuration"""
     full_config = PDFGenerator.get_default_config()
-    # Return only the fields used by the frontend (exclude pdf_options)
     return {
         'prose_size': full_config['prose_size'],
         'prose_color': full_config['prose_color'],
@@ -187,59 +178,27 @@ async def preview_markdown(request: Request, file_id: str):
 
         if os.path.exists(temp_config_path):
             try:
-                # Use temporary config
                 with open(temp_config_path, 'r') as f:
                     temp_config = json.load(f)
 
-                print(f"DEBUG: Loaded temp config: {type(temp_config)}")
-                print(f"DEBUG: Temp config keys: {temp_config.keys() if isinstance(temp_config, dict) else 'NOT A DICT'}")
-
-                # Validate temp config structure
                 if not isinstance(temp_config, dict) or 'custom_classes' not in temp_config:
-                    print(f"WARNING: Invalid temp config structure, using saved config")
                     pdf_gen = PDFGenerator()
                 else:
                     pdf_gen = PDFGenerator()
                     pdf_gen.config = temp_config
-                    print(f"DEBUG: Applied temp config to PDFGenerator")
             except Exception as e:
-                print(f"ERROR loading temp config: {e}")
-                import traceback
-                traceback.print_exc()
-                # Fall back to saved config if temp config fails
                 pdf_gen = PDFGenerator()
         else:
-            # Use saved config.yaml
             pdf_gen = PDFGenerator()
-            print(f"DEBUG: Using saved config (no temp config found)")
 
-        # Generate HTML from markdown
         try:
             html_body = pdf_gen.markdown_to_html(markdown_content)
-            print(f"DEBUG: markdown_to_html returned type: {type(html_body)}, length: {len(html_body)}")
             html_body = pdf_gen.apply_custom_classes(html_body)
-            print(f"DEBUG: apply_custom_classes returned type: {type(html_body)}, length: {len(html_body)}")
             html_body = pdf_gen.apply_codehilite_wrapper_styling(html_body)
-            print(f"DEBUG: apply_codehilite_wrapper_styling returned type: {type(html_body)}, length: {len(html_body)}")
         except Exception as e:
-            print(f"ERROR applying custom classes: {e}")
-            import traceback
-            traceback.print_exc()
-            # Fallback: use markdown without custom classes
             html_body = pdf_gen.markdown_to_html(markdown_content)
 
-        # Extract just the filename without extension
-        # The filename here is the original filename from metadata, not the UUID filename
         original_filename = Path(filename).stem
-
-        print(f"DEBUG: About to render template")
-        print(f"DEBUG: html_body is string: {isinstance(html_body, str)}")
-        print(f"DEBUG: config type: {type(pdf_gen.config)}")
-        print(f"DEBUG: config is dict: {isinstance(pdf_gen.config, dict)}")
-        print(f"DEBUG: html_body first 200 chars: {html_body[:200]}")
-        print(f"DEBUG: Passing to template - html_content length: {len(html_body)}")
-
-        # Generate CodeHilite CSS based on selected theme
         codehilite_css = pdf_gen.get_codehilite_css()
 
         return templates.TemplateResponse(
