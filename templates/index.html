@@ -309,6 +309,50 @@
                         </div>
                     </div>
 
+                    <!-- Code Block Container -->
+                    <div class="divider">Code Block Container</div>
+
+                    <div class="space-y-4 mb-4">
+                        
+                        <div class="form-control">
+                            <label class="label cursor-pointer justify-start gap-4">
+                                <input type="checkbox" name="codehilite_auto_bg" id="codehilite_auto_bg"
+                                       {% if config.codehilite_container is defined and config.codehilite_container.auto_background %}checked{% endif %}
+                                       class="checkbox checkbox-primary" />
+                                <div>
+                                    <span class="label-text font-semibold">Auto-match theme background</span>
+                                    <p class="label-text-alt text-xs mt-1">Automatically use exact background color from Pygments theme (monokai → #272822, dracula → #282a36, etc.)</p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Custom Background (optional)</span>
+                            </label>
+                            <input type="text" name="codehilite_custom_bg" id="codehilite_custom_bg"
+                                   value="{{ config.codehilite_container.custom_background if config.codehilite_container is defined else '' }}"
+                                   placeholder="#272822"
+                                   class="input input-bordered w-full" />
+                            <label class="label">
+                                <span class="label-text-alt">Hex color (overrides auto-detect). Leave empty to use theme background.</span>
+                            </label>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Code Block Container Classes</span>
+                            </label>
+                            <input type="text" name="codehilite_wrapper_classes" id="codehilite_wrapper_classes"
+                                   value="{{ config.codehilite_container.wrapper_classes if config.codehilite_container is defined else 'p-4 rounded-lg overflow-x-auto my-4' }}"
+                                   placeholder="p-4 rounded-lg overflow-x-auto my-4"
+                                   class="input input-bordered w-full" />
+                            <label class="label">
+                                <span class="label-text-alt">Tailwind CSS classes for code block wrapper (e.g., p-4 rounded-lg shadow-md overflow-x-auto)</span>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="mt-6 flex gap-2">
                         <button type="submit" id="saveBtn" class="btn btn-primary" disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -408,7 +452,8 @@
         const fieldNames = ['h1_classes', 'h2_classes', 'h3_classes', 'h4_classes', 'h5_classes', 'h6_classes',
                            'p_classes', 'a_classes', 'code_classes', 'pre_classes', 'blockquote_classes',
                            'table_classes', 'thead_classes', 'tbody_classes', 'tr_classes', 'td_classes', 'th_classes',
-                           'ul_classes', 'ol_classes', 'li_classes', 'hr_classes', 'img_classes'];
+                           'ul_classes', 'ol_classes', 'li_classes', 'hr_classes', 'img_classes',
+                           'codehilite_auto_bg', 'codehilite_custom_bg', 'codehilite_wrapper_classes'];
 
         // Load saved config on page load
         async function loadSavedConfig() {
@@ -431,14 +476,23 @@
                            proseColor !== (savedConfig.prose_color || '') ||
                            codehiliteTheme !== (savedConfig.codehilite_theme || 'default');
 
-            fieldNames.forEach(fieldName => {
-                const input = document.getElementById(fieldName);
-                const elementName = fieldName.replace('_classes', '');
-                const savedValue = savedConfig.custom_classes[elementName] || '';
-                const currentValue = input.value.trim();
+            // Check codehilite_container fields
+            const container = savedConfig.codehilite_container || {};
+            hasChanges = hasChanges ||
+                document.getElementById('codehilite_auto_bg').checked !== (container.auto_background !== false) ||
+                document.getElementById('codehilite_custom_bg').value.trim() !== (container.custom_background || '') ||
+                document.getElementById('codehilite_wrapper_classes').value.trim() !== (container.wrapper_classes || 'p-4 rounded-lg overflow-x-auto my-4');
 
-                if (savedValue !== currentValue) {
-                    hasChanges = true;
+            fieldNames.forEach(fieldName => {
+                if (fieldName.endsWith('_classes')) {
+                    const input = document.getElementById(fieldName);
+                    const elementName = fieldName.replace('_classes', '');
+                    const savedValue = savedConfig.custom_classes[elementName] || '';
+                    const currentValue = input.value.trim();
+
+                    if (savedValue !== currentValue) {
+                        hasChanges = true;
+                    }
                 }
             });
 
@@ -502,14 +556,22 @@
                 prose_size: document.getElementById('proseSize').value,
                 prose_color: document.getElementById('proseColor').value.trim(),
                 codehilite_theme: document.getElementById('codehilite_theme').value,
+                codehilite_container: {
+                    auto_background: document.getElementById('codehilite_auto_bg').checked,
+                    custom_background: document.getElementById('codehilite_custom_bg').value.trim(),
+                    wrapper_classes: document.getElementById('codehilite_wrapper_classes').value.trim()
+                },
                 custom_classes: {},
                 pdf_options: savedConfig.pdf_options || {}
             };
 
+            // Only process fields ending with '_classes' for custom_classes
             fieldNames.forEach(fieldName => {
-                const input = document.getElementById(fieldName);
-                const elementName = fieldName.replace('_classes', '');
-                config.custom_classes[elementName] = input.value.trim();
+                if (fieldName.endsWith('_classes')) {
+                    const input = document.getElementById(fieldName);
+                    const elementName = fieldName.replace('_classes', '');
+                    config.custom_classes[elementName] = input.value.trim();
+                }
             });
 
             return config;
@@ -843,6 +905,7 @@
 
         // Initialize on page load
         loadSavedConfig();
+        toggleCustomBackground();  // Set initial state of custom background field
     </script>
 </body>
 </html>

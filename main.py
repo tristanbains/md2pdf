@@ -102,6 +102,7 @@ async def get_factory_config():
         'prose_size': full_config['prose_size'],
         'prose_color': full_config['prose_color'],
         'codehilite_theme': full_config['codehilite_theme'],
+        'codehilite_container': full_config['codehilite_container'],
         'custom_classes': full_config['custom_classes']
     }
 
@@ -110,6 +111,9 @@ async def update_config(
     prose_size: str = Form(...),
     prose_color: str = Form(""),
     codehilite_theme: str = Form("default"),
+    codehilite_auto_bg: bool = Form(True),
+    codehilite_custom_bg: str = Form(""),
+    codehilite_wrapper_classes: str = Form(""),
     h1_classes: str = Form(""),
     h2_classes: str = Form(""),
     h3_classes: str = Form(""),
@@ -137,6 +141,11 @@ async def update_config(
         "prose_size": prose_size,
         "prose_color": prose_color,
         "codehilite_theme": codehilite_theme,
+        "codehilite_container": {
+            "auto_background": codehilite_auto_bg,
+            "custom_background": codehilite_custom_bg,
+            "wrapper_classes": codehilite_wrapper_classes
+        },
         "custom_classes": {
             "h1": h1_classes,
             "h2": h2_classes,
@@ -210,6 +219,8 @@ async def preview_markdown(request: Request, file_id: str):
             print(f"DEBUG: markdown_to_html returned type: {type(html_body)}, length: {len(html_body)}")
             html_body = pdf_gen.apply_custom_classes(html_body)
             print(f"DEBUG: apply_custom_classes returned type: {type(html_body)}, length: {len(html_body)}")
+            html_body = pdf_gen.apply_codehilite_wrapper_styling(html_body)
+            print(f"DEBUG: apply_codehilite_wrapper_styling returned type: {type(html_body)}, length: {len(html_body)}")
         except Exception as e:
             print(f"ERROR applying custom classes: {e}")
             import traceback

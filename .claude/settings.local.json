@@ -26,7 +26,9 @@
       "Bash(tree:*)",
       "Bash(git log:*)",
       "Bash(make restart:*)",
-      "Bash(uv sync:*)"
+      "Bash(uv sync:*)",
+      "Bash(pkill:*)",
+      "Bash(rm:*)"
     ],
     "deny": [],
     "ask": []

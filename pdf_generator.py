@@ -28,7 +28,17 @@ class PDFGenerator:
 
     def load_config(self, config_path: str) -> Dict:
         with open(config_path, 'r') as f:
-            return yaml.safe_load(f)
+            config = yaml.safe_load(f)
+
+        # Migrate old configs: add codehilite_container if missing
+        if 'codehilite_container' not in config:
+            default_config = self.get_default_config()
+            config['codehilite_container'] = default_config['codehilite_container']
+            # Save updated config
+            with open(config_path, 'w') as f:
+                yaml.dump(config, f, default_flow_style=False)
+
+        return config
 
     @staticmethod
     def get_default_config():
@@ -37,6 +47,11 @@ class PDFGenerator:
             'prose_size': 'prose',
             'prose_color': '',
             'codehilite_theme': 'default',
+            'codehilite_container': {
+                'auto_background': True,
+                'custom_background': '',
+                'wrapper_classes': 'p-4 rounded-lg overflow-x-auto my-4'
+            },
             'custom_classes': {
                 'a': '',
                 'blockquote': '',
@@ -90,6 +105,11 @@ class PDFGenerator:
             self.config['prose_color'] = updates['prose_color']
         if 'codehilite_theme' in updates:
             self.config['codehilite_theme'] = updates['codehilite_theme']
+        if 'codehilite_container' in updates:
+            # Ensure codehilite_container exists in config
+            if 'codehilite_container' not in self.config:
+                self.config['codehilite_container'] = self.get_default_config()['codehilite_container']
+            self.config['codehilite_container'].update(updates['codehilite_container'])
         if 'custom_classes' in updates:
             self.config['custom_classes'].update(updates['custom_classes'])
         self.save_config()
@@ -110,18 +130,7 @@ class PDFGenerator:
         try:
             formatter = HtmlFormatter(style=theme_name)
             css = formatter.get_style_defs('.codehilite')
-
-            # Add container styling
-            container_css = """
-.codehilite {
-    background: #f8f8f8;
-    padding: 1em;
-    border-radius: 0.5em;
-    overflow-x: auto;
-    margin: 1em 0;
-}
-"""
-            full_css = container_css + css
+            full_css = css
 
             # If scope_prefix provided, prepend it to all selectors
             if scope_prefix:
@@ -207,6 +216,55 @@ class PDFGenerator:
             return result
         except Exception as e:
             print(f"ERROR in apply_custom_classes: {e}")
+            import traceback
+            traceback.print_exc()
+            return html_content  # Return original HTML on error
+
+    def apply_codehilite_wrapper_styling(self, html_content: str) -> str:
+        """Apply Tailwind classes and background color to .codehilite wrapper divs"""
+        from bs4 import BeautifulSoup
+        from pygments.formatters import HtmlFormatter
+
+        try:
+            soup = BeautifulSoup(html_content, 'html.parser')
+            container_config = self.config.get('codehilite_container', {})
+
+            # Get wrapper classes
+            wrapper_classes = container_config.get('wrapper_classes', '').strip()
+
+            # Get background color settings
+            auto_bg = container_config.get('auto_background', True)
+            custom_bg = container_config.get('custom_background', '').strip()
+
+            # Determine background color
+            background = None
+            if custom_bg:
+                background = custom_bg
+            elif auto_bg:
+                theme_name = self.config.get('codehilite_theme', 'default')
+                formatter = HtmlFormatter(style=theme_name)
+                background = getattr(formatter.style, 'background_color', None)
+
+            # Find all .codehilite divs and apply styling
+            for div in soup.find_all('div', class_='codehilite'):
+                # Add Tailwind classes
+                if wrapper_classes:
+                    existing_classes = div.get('class', [])
+                    if isinstance(existing_classes, str):
+                        existing_classes = existing_classes.split()
+                    new_classes = wrapper_classes.split()
+                    div['class'] = existing_classes + new_classes
+
+                # Add inline background style
+                if background:
+                    existing_style = div.get('style', '')
+                    if existing_style and not existing_style.endswith(';'):
+                        existing_style += ';'
+                    div['style'] = f"{existing_style}background-color: {background};"
+
+            return str(soup)
+        except Exception as e:
+            print(f"ERROR in apply_codehilite_wrapper_styling: {e}")
             import traceback
             traceback.print_exc()
             return html_content  # Return original HTML on error
