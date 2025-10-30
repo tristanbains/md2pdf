@@ -35,7 +35,7 @@ uv run uvicorn main:app --reload --host 127.0.0.1 --port 8000
 - `templates/preview.html` - Print-optimized preview page with `window.print()` integration
 
 **Core Design Decisions**:
-1. **Browser-based PDF generation** via `window.print()` (not WeasyPrint/xhtml2pdf) for high-quality output
+1. **Browser-based PDF generation** via `window.print()` for high-quality output
 2. **UUID-based temporary storage** with automatic 24-hour cleanup
 3. **Dual config locations**: `config.yaml` (dev) or `~/Library/Application Support/md2pdf/config.yaml` (production)
 4. **TailwindCSS classes applied server-side** via BeautifulSoup to markdown-rendered HTML
@@ -209,4 +209,3 @@ Prose colors have SUBTLE differences between grayscale variants (slate/zinc/ston
 - **Running the app**: Works on any platform with uv installed
 - **All commands use uv**: Consistent Python environment across platforms
 - **Core functionality**: Fully portable (FastAPI, markdown processing, browser-based PDF)
-- **WeasyPrint**: Optional feature requiring platform-specific system dependencies

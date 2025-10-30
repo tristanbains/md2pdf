@@ -25,7 +25,8 @@
       "WebFetch(domain:play.tailwindcss.com)",
       "Bash(tree:*)",
       "Bash(git log:*)",
-      "Bash(make restart:*)"
+      "Bash(make restart:*)",
+      "Bash(uv sync:*)"
     ],
     "deny": [],
     "ask": []

@@ -3,7 +3,6 @@ from markdown.extensions import tables, fenced_code, codehilite
 import yaml
 from pathlib import Path
 from typing import Dict, Optional
-import io
 import os
 
 class PDFGenerator:
@@ -26,25 +25,7 @@ class PDFGenerator:
 
         self.config_path = config_path
         self.config = self.load_config(config_path)
-        self.weasyprint_available = None
-        self.font_config = None
-        
-    def _check_dependencies(self):
-        if self.weasyprint_available is not None:
-            return self.weasyprint_available
-            
-        try:
-            from weasyprint import HTML, CSS
-            from weasyprint.text.fonts import FontConfiguration
-            self.weasyprint_available = True
-            self.font_config = FontConfiguration()
-        except (ImportError, OSError) as e:
-            self.weasyprint_available = False
-            print(f"Warning: WeasyPrint not available - {e}")
-            print("Please install system dependencies. See README.md for instructions.")
-            return False
-        return True
-        
+
     def load_config(self, config_path: str) -> Dict:
         with open(config_path, 'r') as f:
             return yaml.safe_load(f)
@@ -229,82 +210,3 @@ class PDFGenerator:
             import traceback
             traceback.print_exc()
             return html_content  # Return original HTML on error
-    
-    def generate_full_html(self, markdown_content: str, use_external_css: bool = True) -> str:
-        html_body = self.markdown_to_html(markdown_content)
-        html_body = self.apply_custom_classes(html_body)
-        
-        prose_size = self.config['prose_size']
-        
-        # Choose CSS approach based on PDF generator
-        css_link = ""
-        if use_external_css:
-            css_link = '<link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.0/dist/tailwind.min.css" rel="stylesheet">'
-        
-        full_html = f"""
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {css_link}
-    <style>
-        @page {{
-            size: {self.config['pdf_options']['format']};
-            margin: {self.config['pdf_options']['margin_top']}
-                    {self.config['pdf_options']['margin_right']}
-                    {self.config['pdf_options']['margin_bottom']}
-                    {self.config['pdf_options']['margin_left']};
-        }}
-    </style>
-</head>
-<body class="bg-white">
-    <div class="prose {prose_size} max-w-none p-8">
-        {html_body}
-    </div>
-</body>
-</html>
-"""
-        return full_html
-    
-    def generate_pdf(self, markdown_content: str, output_path: Optional[str] = None) -> bytes:
-        # Try WeasyPrint first
-        if self._check_dependencies():
-            try:
-                from weasyprint import HTML
-                html_content = self.generate_full_html(markdown_content, use_external_css=True)
-                if output_path:
-                    HTML(string=html_content).write_pdf(
-                        output_path,
-                        font_config=self.font_config
-                    )
-                    with open(output_path, 'rb') as f:
-                        return f.read()
-                else:
-                    pdf_bytes = HTML(string=html_content).write_pdf(
-                        font_config=self.font_config
-                    )
-                    return pdf_bytes
-            except Exception as e:
-                print(f"WeasyPrint failed: {e}")
-                # Fall through to xhtml2pdf
-        
-        # Fallback to xhtml2pdf (without external CSS)
-        print("Using xhtml2pdf as fallback PDF generator...")
-        from xhtml2pdf import pisa
-        
-        html_content = self.generate_full_html(markdown_content, use_external_css=False)
-        
-        if output_path:
-            with open(output_path, "wb") as result_file:
-                pisa_status = pisa.CreatePDF(html_content, dest=result_file)
-                if pisa_status.err:
-                    raise RuntimeError(f"xhtml2pdf error: {pisa_status.err}")
-            with open(output_path, 'rb') as f:
-                return f.read()
-        else:
-            result = io.BytesIO()
-            pisa_status = pisa.CreatePDF(html_content, dest=result)
-            if pisa_status.err:
-                raise RuntimeError(f"xhtml2pdf error: {pisa_status.err}")
-            return result.getvalue()

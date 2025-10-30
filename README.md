@@ -16,64 +16,6 @@ uv run uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
 The application will open automatically at http://127.0.0.1:8000
 
-## Optional: WeasyPrint System Dependencies
-
-**Note**: WeasyPrint is optional. The app uses browser-based PDF generation by default.
-
-If you want to enable WeasyPrint for server-side PDF generation:
-
-### macOS (using Homebrew)
-```bash
-brew install python3 cairo pango gdk-pixbuf libffi
-```
-
-### Ubuntu/Debian
-```bash
-sudo apt-get install python3-dev python3-pip python3-cffi libcairo2 libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev shared-mime-info
-```
-
-### Windows
-Download and install GTK3 runtime from:
-https://github.com/tschoonj/GTK-for-Windows-Runtime-Environment-Installer/releases
-
-Or use Windows Subsystem for Linux (WSL) with Ubuntu instructions.
-
-## Installation
-
-1. Install system dependencies (see above)
-2. Install Python dependencies:
-```bash
-uv sync
-```
-
-## Verify Installation
-After installing system dependencies and Python packages, verify:
-```bash
-uv run python -c "import weasyprint; print('WeasyPrint installed successfully')"
-```
-
-## Alternative PDF Libraries (if WeasyPrint fails)
-
-### Option 1: pdfkit (requires wkhtmltopdf)
-```bash
-# Install wkhtmltopdf
-# macOS:
-brew install wkhtmltopdf
-
-# Ubuntu:
-sudo apt-get install wkhtmltopdf
-
-# Then install Python package:
-uv add pdfkit
-```
-
-### Option 2: xhtml2pdf (pure Python, no system deps)
-```bash
-uv add xhtml2pdf
-```
-
-Note: xhtml2pdf has limited CSS support compared to WeasyPrint.
-
 ## Running the Application
 
 Start the development server:

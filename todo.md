@@ -7,3 +7,4 @@
 - [ ] codehilite and tailwind integration, logical combinations, what theme looks good in a pdf and is good for printing on paper
 - [ ] generate single html output?
 - [ ] remove all weasyprint etc legacy referrals
+- [ ] tailwind without CDN, in-app

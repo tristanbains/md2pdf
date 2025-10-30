@@ -49,7 +49,7 @@
             <p class="text-sm text-gray-500">Total themes available: {{ themes|length }}</p>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {% for theme_name in themes.keys() | sort %}
             <div class="theme-card bg-white rounded-lg shadow-md p-4"
                  data-theme="{{ theme_name }}"
@@ -65,14 +65,14 @@
                     </div>
                 </div>
 
-                <button class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-4 rounded transition-colors">
+                <!-- <button class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-4 rounded transition-colors">
                     Select {{ theme_name | replace('_', ' ') }}
-                </button>
+                </button> -->
             </div>
             {% endfor %}
         </div>
 
-        <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+        <!-- <div class="mt-8 bg-white rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-2">Sample Code Used Above:</h3>
             <pre class="bg-gray-50 p-4 rounded text-sm overflow-x-auto"><code>def fibonacci(n):
     if n <= 1:
@@ -80,7 +80,7 @@
     return fibonacci(n-1) + fibonacci(n-2)
 
 print(fibonacci(10))</code></pre>
-        </div>
+        </div> -->
 
         <div class="mt-4 text-center">
             <button onclick="window.close()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded transition-colors">
@@ -91,10 +91,10 @@ print(fibonacci(10))</code></pre>
 
     <script>
         function selectTheme(themeName) {
-            console.log('=== THEME PREVIEW DEBUG ===');
-            console.log('1. Theme name:', themeName);
-            console.log('2. window.opener exists:', !!window.opener);
-            console.log('3. window.opener:', window.opener);
+            // console.log('=== THEME PREVIEW DEBUG ===');
+            // console.log('1. Theme name:', themeName);
+            // console.log('2. window.opener exists:', !!window.opener);
+            // console.log('3. window.opener:', window.opener);
 
             // Send theme selection to parent window
             if (window.opener) {
