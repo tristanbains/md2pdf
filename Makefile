@@ -1,20 +1,21 @@
-.PHONY: restart build clean install-deps dev git-quick
+.PHONY: restart build clean install-deps dev stop git-quick
 
 # Development: restart server and open browser
 restart:
 	@echo "🛑 Killing existing server..."
-	@lsof -ti:8000 | xargs kill -9 2>/dev/null || true
+	@lsof -ti:8000 | xargs kill -TERM 2>/dev/null || true
 	@sleep 1
-	@echo "🚀 Starting server..."
-	@uv run uvicorn main:app --reload --host 127.0.0.1 --port 8000 &
-	@sleep 2
-	@echo "🌐 Opening browser..."
-	@open http://127.0.0.1:8000
-	@echo "✅ Server started!"
+	@echo "🚀 Starting server (press CTRL+C to stop)..."
+	@(for i in 1 2 3 4 5 6 7 8 9 10; do curl -s http://127.0.0.1:8000 > /dev/null 2>&1 && break || sleep 0.5; done; open http://127.0.0.1:8000) &
+	@uv run uvicorn main:app --reload --host 127.0.0.1 --port 8000
 
-# Start dev server (foreground with logs)
-dev:
-	uv run uvicorn main:app --reload --host 127.0.0.1 --port 8000
+# Start dev server (alias of restart)
+dev: restart
+
+# Stop server
+stop:
+	@echo "🛑 Stopping server..."
+	@lsof -ti:8000 | xargs kill -TERM 2>/dev/null && echo "✅ Server stopped" || echo "ℹ️  No server running on port 8000"
 
 # Install build dependencies
 install-deps:

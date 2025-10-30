@@ -28,7 +28,12 @@
       "Bash(make restart:*)",
       "Bash(uv sync:*)",
       "Bash(pkill:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(lsof:*)",
+      "Bash(kill:*)",
+      "Bash(ps:*)",
+      "Bash(pstree:*)",
+      "Bash(xargs kill -TERM)"
     ],
     "deny": [],
     "ask": []
