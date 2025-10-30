@@ -55,6 +55,7 @@ class PDFGenerator:
         return {
             'prose_size': 'prose',
             'prose_color': '',
+            'codehilite_theme': 'default',
             'custom_classes': {
                 'a': '',
                 'blockquote': '',
@@ -106,23 +107,92 @@ class PDFGenerator:
             self.config['prose_size'] = updates['prose_size']
         if 'prose_color' in updates:
             self.config['prose_color'] = updates['prose_color']
+        if 'codehilite_theme' in updates:
+            self.config['codehilite_theme'] = updates['codehilite_theme']
         if 'custom_classes' in updates:
             self.config['custom_classes'].update(updates['custom_classes'])
         self.save_config()
+
+    def get_codehilite_css(self, theme_name: str = None, scope_prefix: str = None) -> str:
+        """Generate CSS for code highlighting from Pygments theme
+
+        Args:
+            theme_name: Name of the Pygments theme to use
+            scope_prefix: Optional CSS class prefix to scope the styles (e.g., '.theme-monokai')
+        """
+        from pygments.formatters import HtmlFormatter
+        import re
+
+        if theme_name is None:
+            theme_name = self.config.get('codehilite_theme', 'default')
+
+        try:
+            formatter = HtmlFormatter(style=theme_name)
+            css = formatter.get_style_defs('.codehilite')
+
+            # Add container styling
+            container_css = """
+.codehilite {
+    background: #f8f8f8;
+    padding: 1em;
+    border-radius: 0.5em;
+    overflow-x: auto;
+    margin: 1em 0;
+}
+"""
+            full_css = container_css + css
+
+            # If scope_prefix provided, prepend it to all selectors
+            if scope_prefix:
+                # Remove trailing/leading whitespace from prefix
+                scope_prefix = scope_prefix.strip()
+
+                # Match CSS selectors (everything before the opening brace)
+                # This regex finds patterns like ".codehilite .k {" or ".codehilite {"
+                def add_scope(match):
+                    selector = match.group(1).strip()
+                    # Prepend scope prefix to the selector
+                    return f"{scope_prefix} {selector} {{"
+
+                # Replace all CSS selectors with scoped versions
+                full_css = re.sub(r'([^{}]+)\s*\{', add_scope, full_css)
+
+            return full_css
+        except Exception as e:
+            print(f"Error generating CSS for theme '{theme_name}': {e}")
+            # Fallback to default theme
+            formatter = HtmlFormatter(style='default')
+            return formatter.get_style_defs('.codehilite')
+
+    @staticmethod
+    def get_available_themes():
+        """Get list of all available Pygments themes"""
+        from pygments.styles import get_all_styles
+        return sorted(list(get_all_styles()))
     
     def markdown_to_html(self, markdown_content: str) -> str:
-        md = markdown.Markdown(extensions=[
-            'tables',
-            'fenced_code',
-            'codehilite',
-            'nl2br',
-            'sane_lists',
-            'attr_list',
-            'def_list',
-            'abbr',
-            'footnotes',
-            'toc'
-        ])
+        # Get configured theme
+        theme_name = self.config.get('codehilite_theme', 'default')
+
+        md = markdown.Markdown(
+            extensions=[
+                'tables',
+                'fenced_code',
+                'codehilite',
+                'nl2br',
+                'sane_lists',
+                'attr_list',
+                'def_list',
+                'abbr',
+                'footnotes',
+                'toc'
+            ],
+            extension_configs={
+                'codehilite': {
+                    'pygments_style': theme_name
+                }
+            }
+        )
         return md.convert(markdown_content)
     
     def apply_custom_classes(self, html_content: str) -> str:

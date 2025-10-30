@@ -3,4 +3,7 @@
 - [ ] multiple settings files, and refer to them for different report styles
 - [ ] add save current settings button to preview popup, and ask if user wants to save to specific custom classes file
 - [ ] choose font
-
+- [ ] custom header or footer, pagination, etc.
+- [ ] codehilite and tailwind integration, logical combinations, what theme looks good in a pdf and is good for printing on paper
+- [ ] generate single html output?
+- [ ] remove all weasyprint etc legacy referrals

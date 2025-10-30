@@ -78,11 +78,13 @@ def get_file_content(file_id: str) -> tuple[str, str]:
 async def home(request: Request):
     # Create PDFGenerator only for loading config
     pdf_gen = PDFGenerator()
+    available_themes = pdf_gen.get_available_themes()
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "config": pdf_gen.config
+            "config": pdf_gen.config,
+            "available_themes": available_themes
         }
     )
 
@@ -99,6 +101,7 @@ async def get_factory_config():
     return {
         'prose_size': full_config['prose_size'],
         'prose_color': full_config['prose_color'],
+        'codehilite_theme': full_config['codehilite_theme'],
         'custom_classes': full_config['custom_classes']
     }
 
@@ -106,6 +109,7 @@ async def get_factory_config():
 async def update_config(
     prose_size: str = Form(...),
     prose_color: str = Form(""),
+    codehilite_theme: str = Form("default"),
     h1_classes: str = Form(""),
     h2_classes: str = Form(""),
     h3_classes: str = Form(""),
@@ -132,6 +136,7 @@ async def update_config(
     updates = {
         "prose_size": prose_size,
         "prose_color": prose_color,
+        "codehilite_theme": codehilite_theme,
         "custom_classes": {
             "h1": h1_classes,
             "h2": h2_classes,
@@ -157,7 +162,7 @@ async def update_config(
             "hr": hr_classes
         }
     }
-    
+
     pdf_gen = PDFGenerator()
     pdf_gen.update_config(updates)
     return {"status": "success", "message": "Configuration updated"}
@@ -223,19 +228,60 @@ async def preview_markdown(request: Request, file_id: str):
         print(f"DEBUG: html_body first 200 chars: {html_body[:200]}")
         print(f"DEBUG: Passing to template - html_content length: {len(html_body)}")
 
+        # Generate CodeHilite CSS based on selected theme
+        codehilite_css = pdf_gen.get_codehilite_css()
+
         return templates.TemplateResponse(
             "preview.html",
             {
                 "request": request,
                 "html_content": html_body,
                 "filename": original_filename,
-                "config": pdf_gen.config
+                "config": pdf_gen.config,
+                "codehilite_css": codehilite_css
             }
         )
     except FileNotFoundError:
         return HTMLResponse("<h1>File not found</h1><p>The requested file may have expired or does not exist.</p>", status_code=404)
     except Exception as e:
         return HTMLResponse(f"<h1>Error</h1><p>Failed to load preview: {str(e)}</p>", status_code=500)
+
+@app.get("/theme-preview", response_class=HTMLResponse)
+async def theme_preview(request: Request):
+    """Display all available Pygments themes with sample code"""
+    pdf_gen = PDFGenerator()
+
+    # Get all available themes
+    available_themes = pdf_gen.get_available_themes()
+
+    # Sample Python code for preview (with syntax highlighting markup)
+    sample_code = '''<span class="k">def</span> <span class="nf">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">fibonacci</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">fibonacci</span><span class="p">(</span><span class="mi">10</span><span class="p">))</span>'''
+
+    # Generate CSS for each theme with scope prefix
+    themes_with_css = {}
+    for theme in available_themes:
+        try:
+            # Create scope prefix by replacing special characters
+            scope_class = f".theme-{theme.replace('.', '_').replace('-', '_')}"
+            css = pdf_gen.get_codehilite_css(theme, scope_prefix=scope_class)
+            themes_with_css[theme] = css
+        except Exception as e:
+            print(f"Error generating CSS for theme {theme}: {e}")
+            continue
+
+    return templates.TemplateResponse(
+        "theme_preview.html",
+        {
+            "request": request,
+            "themes": themes_with_css,
+            "sample_code": sample_code
+        }
+    )
 
 @app.post("/api/convert")
 async def convert_markdown(

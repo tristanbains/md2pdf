@@ -84,7 +84,7 @@
             <div class="collapse-content">
                 <form id="settingsForm">
                     <!-- Prose Settings -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="form-control">
                             <label class="label">
                                 <span class="label-text font-semibold">Prose Size</span>
@@ -106,6 +106,24 @@
                                    placeholder="prose-slate" class="input input-bordered w-full" />
                             <label class="label">
                                 <span class="label-text-alt">Enter a Tailwind prose color class (e.g., prose-slate, prose-zinc, prose-gray)</span>
+                            </label>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Code Theme</span>
+                            </label>
+                            <select name="codehilite_theme" id="codehilite_theme" class="select select-bordered w-full">
+                                {% for theme in available_themes %}
+                                <option value="{{ theme }}" {% if config.codehilite_theme == theme %}selected{% endif %}>
+                                    {{ theme.replace('-', ' ').replace('_', ' ').title() }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <label class="label">
+                                <span class="label-text-alt">
+                                    <a href="#" onclick="openThemePreview(); return false;" class="link link-primary">Preview all themes →</a>
+                                </span>
                             </label>
                         </div>
                     </div>
@@ -407,9 +425,11 @@
         function checkForChanges() {
             const proseSize = document.getElementById('proseSize').value;
             const proseColor = document.getElementById('proseColor').value.trim();
+            const codehiliteTheme = document.getElementById('codehilite_theme').value;
 
             let hasChanges = proseSize !== savedConfig.prose_size ||
-                           proseColor !== (savedConfig.prose_color || '');
+                           proseColor !== (savedConfig.prose_color || '') ||
+                           codehiliteTheme !== (savedConfig.codehilite_theme || 'default');
 
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -481,6 +501,7 @@
             const config = {
                 prose_size: document.getElementById('proseSize').value,
                 prose_color: document.getElementById('proseColor').value.trim(),
+                codehilite_theme: document.getElementById('codehilite_theme').value,
                 custom_classes: {},
                 pdf_options: savedConfig.pdf_options || {}
             };
@@ -516,11 +537,16 @@
             checkForChanges();
         });
 
+        document.getElementById('codehilite_theme').addEventListener('change', () => {
+            checkForChanges();
+        });
+
         // Revert button handler
         revertBtn.addEventListener('click', () => {
             // Reload form with saved config
             document.getElementById('proseSize').value = savedConfig.prose_size;
             document.getElementById('proseColor').value = savedConfig.prose_color || '';
+            document.getElementById('codehilite_theme').value = savedConfig.codehilite_theme || 'default';
 
             fieldNames.forEach(fieldName => {
                 const input = document.getElementById(fieldName);
@@ -550,6 +576,7 @@
                 // Update form with factory defaults
                 document.getElementById('proseSize').value = factoryConfig.prose_size;
                 document.getElementById('proseColor').value = factoryConfig.prose_color || '';
+                document.getElementById('codehilite_theme').value = factoryConfig.codehilite_theme || 'default';
 
                 fieldNames.forEach(fieldName => {
                     const input = document.getElementById(fieldName);
@@ -569,6 +596,56 @@
             } catch (error) {
                 console.error('Factory reset failed:', error);
                 alert('Failed to load factory defaults. Please try again.');
+            }
+        });
+
+        // Open theme preview in new window with reliable window.opener
+        function openThemePreview() {
+            window.open('/theme-preview', 'themePreview', 'width=1400,height=900,scrollbars=yes,resizable=yes');
+        }
+
+        // Listen for theme selection from preview window
+        window.addEventListener('message', (event) => {
+            // Accept messages from any origin for the theme preview
+            if (event.data && event.data.type === 'theme-selected') {
+                const selectedTheme = event.data.theme;
+
+                console.log('=== THEME SELECTION DEBUG ===');
+                console.log('1. Received event.data:', event.data);
+                console.log('2. Selected theme:', selectedTheme);
+                console.log('3. Theme type:', typeof selectedTheme);
+
+                // Update the dropdown (theme names already in correct format from Pygments)
+                const themeSelect = document.getElementById('codehilite_theme');
+                console.log('4. Dropdown element exists:', !!themeSelect);
+                console.log('5. Dropdown value BEFORE:', themeSelect?.value);
+                console.log('6. All dropdown options:', Array.from(themeSelect?.options || []).map(o => `"${o.value}"`).join(', '));
+
+                themeSelect.value = selectedTheme;
+
+                console.log('7. Dropdown value AFTER:', themeSelect.value);
+                console.log('8. Selected option text:', themeSelect.selectedOptions[0]?.text || 'NONE');
+                console.log('9. Match found:', themeSelect.value === selectedTheme);
+                console.log('10. Dropdown value is empty:', themeSelect.value === '');
+                console.log('=== END DEBUG ===');
+
+                // Trigger change detection
+                checkForChanges();
+
+                // Show notification
+                const notification = document.createElement('div');
+                notification.className = 'toast toast-top toast-center';
+                notification.innerHTML = `
+                    <div class="alert alert-success">
+                        <span>Theme "${selectedTheme}" selected! Don't forget to save your settings.</span>
+                    </div>
+                `;
+                document.body.appendChild(notification);
+
+                // Remove notification after 3 seconds
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
             }
         });
 

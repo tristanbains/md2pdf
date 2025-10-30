@@ -121,6 +121,56 @@ if filename.startswith(file_id) and not filename.endswith(('.meta', '.tempconfig
 ```
 Without `?plugins=typography`, prose classes won't work.
 
+### 9. CodeHilite Theme System (Syntax Highlighting)
+
+**CRITICAL**: Pygments theme names use **hyphens** (e.g., `github-dark`, `one-dark`), NOT underscores. Never convert between formats - keep native Pygments format throughout the system.
+
+**Architecture**:
+- `pdf_generator.py:get_codehilite_css()` generates dynamic CSS from Pygments themes
+- `pdf_generator.py:get_available_themes()` returns ALL Pygments themes (~30)
+- `main.py:/theme-preview` route displays all themes with scoped CSS
+- `main.py:/` home route passes `available_themes` to template
+- `templates/theme_preview.html` shows live code samples with postMessage communication
+- `templates/index.html` dropdown dynamically generated from `available_themes`
+
+**CRITICAL - Dynamic Dropdown Population**:
+The dropdown MUST be dynamically generated from `available_themes` passed from backend:
+```jinja2
+<select name="codehilite_theme" id="codehilite_theme">
+    {% for theme in available_themes %}
+    <option value="{{ theme }}" {% if config.codehilite_theme == theme %}selected{% endif %}>
+        {{ theme.replace('-', ' ').replace('_', ' ').title() }}
+    </option>
+    {% endfor %}
+</select>
+```
+
+**Why This Matters**:
+- Theme preview shows ALL Pygments themes
+- If dropdown is hardcoded with only some themes, selecting unlisted themes from preview will fail silently
+- Dropdown value becomes empty, causing `pygments.styles.` error
+
+**Theme Name Flow**:
+1. `get_all_styles()` returns: "github-dark" (hyphens)
+2. Backend passes to template: `available_themes = ["default", "monokai", "github-dark", ...]`
+3. Dropdown renders: `<option value="github-dark">` (hyphens)
+4. Config saves: `codehilite_theme: "github-dark"` (hyphens)
+5. Pygments receives: "github-dark" (hyphens)
+
+**Theme Preview Gallery**:
+- Each theme gets scoped CSS: `.theme-github_dark .codehilite { ... }`
+- Scope prefix generated in `main.py:271`: `.theme-{name.replace('.', '_').replace('-', '_')}`
+- CSS scoping done in `pdf_generator.py:145-158` via regex selector transformation
+- Clicking theme card sends postMessage with theme name (unchanged)
+- Main page receives theme and updates dropdown via `window.opener.postMessage()`
+- Dropdown selection now guaranteed to succeed because ALL themes are included
+
+**Adding Theme Support**:
+1. `get_codehilite_css(theme_name, scope_prefix)` - generates CSS with optional scoping
+2. `markdown_to_html()` - passes theme to CodeHilite extension via `extension_configs`
+3. Never add format conversions - Pygments handles its own theme names
+4. New themes automatically appear in dropdown via dynamic generation
+
 ## Common Development Patterns
 
 ### Adding a New Styleable Element

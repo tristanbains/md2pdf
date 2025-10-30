@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeHilite Theme Gallery</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .theme-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        .theme-card:hover {
+            border-color: #3b82f6;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        .theme-card.selected {
+            border-color: #10b981;
+            background-color: #f0fdf4;
+        }
+
+        /* Preserve code formatting with proper whitespace */
+        .codehilite {
+            white-space: pre-wrap;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 13px;
+            line-height: 1.3;
+        }
+
+        /* Individual theme styles - already scoped by backend */
+        {% for theme_name, theme_css in themes.items() %}
+{{ theme_css | safe }}
+        {% endfor %}
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-7xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">CodeHilite Theme Gallery</h1>
+            <p class="text-gray-600 mb-4">Click any theme to select it and return to the main page</p>
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                <p class="text-sm text-blue-700">
+                    <strong>💡 Tip:</strong> These are all built-in Pygments themes. Click any theme card to select it and automatically close this window.
+                </p>
+            </div>
+            <p class="text-sm text-gray-500">Total themes available: {{ themes|length }}</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {% for theme_name in themes.keys() | sort %}
+            <div class="theme-card bg-white rounded-lg shadow-md p-4"
+                 data-theme="{{ theme_name }}"
+                 onclick="selectTheme('{{ theme_name }}')">
+                <h2 class="text-lg font-bold text-gray-800 mb-2 capitalize">
+                    {{ theme_name | replace('_', ' ') | replace('-', ' ') }}
+                </h2>
+
+                <!-- Sample code block with this theme -->
+                <div class="theme-{{ theme_name | replace('-', '_') | replace('.', '_') }}">
+                    <div class="codehilite">
+{{ sample_code | safe }}
+                    </div>
+                </div>
+
+                <button class="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-4 rounded transition-colors">
+                    Select {{ theme_name | replace('_', ' ') }}
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="mt-8 bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Sample Code Used Above:</h3>
+            <pre class="bg-gray-50 p-4 rounded text-sm overflow-x-auto"><code>def fibonacci(n):
+    if n <= 1:
+        return n
+    return fibonacci(n-1) + fibonacci(n-2)
+
+print(fibonacci(10))</code></pre>
+        </div>
+
+        <div class="mt-4 text-center">
+            <button onclick="window.close()" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded transition-colors">
+                Close Without Selecting
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function selectTheme(themeName) {
+            console.log('=== THEME PREVIEW DEBUG ===');
+            console.log('1. Theme name:', themeName);
+            console.log('2. window.opener exists:', !!window.opener);
+            console.log('3. window.opener:', window.opener);
+
+            // Send theme selection to parent window
+            if (window.opener) {
+                console.log('4. Sending postMessage...');
+                window.opener.postMessage({
+                    type: 'theme-selected',
+                    theme: themeName
+                }, '*');
+                console.log('5. postMessage sent');
+
+                // Highlight selected card briefly before closing
+                document.querySelectorAll('.theme-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                document.querySelector(`[data-theme="${themeName}"]`).classList.add('selected');
+
+                // Close window after brief delay
+                setTimeout(() => {
+                    window.close();
+                }, 300);
+            } else {
+                alert(`Selected theme: ${themeName}\n\nNote: This window was not opened from the main page, so the selection cannot be sent back.`);
+            }
+        }
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                window.close();
+            }
+        });
+    </script>
+</body>
+</html>
