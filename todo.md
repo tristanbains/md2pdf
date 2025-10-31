@@ -8,3 +8,4 @@
 - [ ] generate single html output?
 - [ ] remove all weasyprint etc legacy referrals
 - [ ] tailwind without CDN, in-app
+- [ ] presets aflopen, dark mode lelijk

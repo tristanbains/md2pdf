@@ -83,6 +83,49 @@
             </div>
             <div class="collapse-content">
                 <form id="settingsForm">
+                    <!-- Presets Section -->
+                    <div class="mb-6 p-4 bg-base-200 rounded-lg border border-base-300">
+                        <h3 class="text-lg font-semibold mb-3">Presets</h3>
+
+                        <!-- Preset Selector -->
+                        <div class="flex gap-2 mb-3">
+                            <select id="preset-selector" class="select select-bordered flex-1">
+                                <option value="">-- Current Settings --</option>
+                                <optgroup label="My Presets" id="user-presets-group">
+                                    <!-- Populated dynamically -->
+                                </optgroup>
+                                <optgroup label="Factory Presets" id="factory-presets-group">
+                                    <!-- Populated dynamically -->
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <!-- Preset Actions -->
+                        <div class="flex gap-2 flex-wrap">
+                            <button type="button" id="save-preset-btn" class="btn btn-success btn-sm">
+                                Save as Preset...
+                            </button>
+
+                            <button type="button" id="export-preset-btn" class="btn btn-neutral btn-sm">
+                                Export...
+                            </button>
+
+                            <button type="button" id="import-preset-btn" class="btn btn-neutral btn-sm">
+                                Import...
+                            </button>
+
+                            <button type="button" id="delete-preset-btn" class="btn btn-error btn-sm" disabled>
+                                Delete
+                            </button>
+                        </div>
+
+                        <!-- Status Message -->
+                        <div id="preset-status" class="mt-2 text-sm hidden"></div>
+                    </div>
+
+                    <!-- Hidden file input for import -->
+                    <input type="file" id="preset-import-input" accept=".yaml,.yml" style="display: none;">
+
                     <!-- Prose Settings -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="form-control">
@@ -427,6 +470,48 @@
                 </button>
             </div>
         </div>
+    </dialog>
+
+    <!-- Save Preset Modal -->
+    <dialog id="save-preset-modal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg mb-4">💾 Save as Preset</h3>
+
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-medium">Preset Name *</span>
+                </label>
+                <input type="text" id="preset-name-input"
+                       class="input input-bordered w-full"
+                       placeholder="My Custom Style"
+                       maxlength="50">
+                <label class="label">
+                    <span class="label-text-alt">Letters, numbers, spaces, dashes, and underscores only</span>
+                </label>
+            </div>
+
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-medium">Description (optional)</span>
+                </label>
+                <textarea id="preset-description-input"
+                          class="textarea textarea-bordered w-full"
+                          placeholder="Brief description of this preset"
+                          rows="3"></textarea>
+            </div>
+
+            <div class="modal-action">
+                <button id="save-preset-cancel" class="btn btn-ghost">
+                    Cancel
+                </button>
+                <button id="save-preset-confirm" class="btn btn-success">
+                    Save
+                </button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
     </dialog>
 
     <script>
@@ -877,9 +962,341 @@
             }, 5000);
         }
 
+        // ========== PRESET MANAGEMENT ==========
+
+        let currentPresets = { factory: [], user: [] };
+        let selectedPreset = null;
+
+        // Load presets on page load
+        async function loadPresets() {
+            try {
+                const response = await fetch('/api/presets');
+                currentPresets = await response.json();
+                updatePresetDropdown();
+            } catch (error) {
+                console.error('Failed to load presets:', error);
+            }
+        }
+
+        function updatePresetDropdown() {
+            const selector = document.getElementById('preset-selector');
+            const factoryGroup = document.getElementById('factory-presets-group');
+            const userGroup = document.getElementById('user-presets-group');
+
+            // Clear existing options
+            factoryGroup.innerHTML = '';
+            userGroup.innerHTML = '';
+
+            // Add factory presets
+            currentPresets.factory.forEach(preset => {
+                const option = document.createElement('option');
+                option.value = preset.slug;
+                option.textContent = preset.name;
+                option.dataset.description = preset.description;
+                factoryGroup.appendChild(option);
+            });
+
+            // Add user presets
+            currentPresets.user.forEach(preset => {
+                const option = document.createElement('option');
+                option.value = preset.slug;
+                option.textContent = preset.name;
+                option.dataset.description = preset.description;
+                userGroup.appendChild(option);
+            });
+        }
+
+        function showPresetStatus(message, type) {
+            const statusEl = document.getElementById('preset-status');
+            statusEl.textContent = message;
+            statusEl.className = `mt-2 text-sm ${type === 'error' ? 'text-error' : 'text-success'}`;
+            statusEl.classList.remove('hidden');
+
+            setTimeout(() => {
+                statusEl.classList.add('hidden');
+            }, 3000);
+        }
+
+        function applyConfigToForm(config) {
+            // Update all form fields with config values
+            document.getElementById('proseSize').value = config.prose_size || 'prose';
+            document.getElementById('proseColor').value = config.prose_color || '';
+            document.getElementById('codehilite_theme').value = config.codehilite_theme || 'default';
+
+            // Codehilite container
+            document.getElementById('codehilite_auto_bg').checked = config.codehilite_container.auto_background;
+            document.getElementById('codehilite_custom_bg').value = config.codehilite_container.custom_background || '';
+            document.getElementById('codehilite_wrapper_classes').value = config.codehilite_container.wrapper_classes || '';
+
+            // Custom classes (all 22 elements)
+            Object.keys(config.custom_classes).forEach(element => {
+                const input = document.getElementById(`${element}_classes`);
+                if (input) {
+                    input.value = config.custom_classes[element] || '';
+                }
+            });
+
+            // Update saved config state
+            savedConfig = config;
+            hasUnsavedChanges = false;
+            updateAllFieldIndicators();
+        }
+
+        // Save preset button
+        document.getElementById('save-preset-btn').addEventListener('click', () => {
+            const modal = document.getElementById('save-preset-modal');
+            const nameInput = document.getElementById('preset-name-input');
+
+            // If a preset is currently selected, prefill its name
+            if (selectedPreset) {
+                // Find the preset name from currentPresets
+                const factoryPreset = currentPresets.factory.find(p => p.slug === selectedPreset);
+                const userPreset = currentPresets.user.find(p => p.slug === selectedPreset);
+                const currentPresetName = (factoryPreset || userPreset)?.name || '';
+                nameInput.value = currentPresetName;
+            } else {
+                nameInput.value = '';
+            }
+
+            modal.showModal();
+            nameInput.focus();
+            nameInput.select(); // Select the text so user can easily type over it
+        });
+
+        // Save preset cancel
+        document.getElementById('save-preset-cancel').addEventListener('click', () => {
+            const modal = document.getElementById('save-preset-modal');
+            modal.close();
+        });
+
+        // Save preset confirm
+        document.getElementById('save-preset-confirm').addEventListener('click', async () => {
+            const name = document.getElementById('preset-name-input').value.trim();
+            const description = document.getElementById('preset-description-input').value.trim();
+
+            if (!name) {
+                alert('Please enter a preset name');
+                return;
+            }
+
+            // Check if name matches a factory preset (case-insensitive)
+            const factoryPreset = currentPresets.factory.find(p => p.name.toLowerCase() === name.toLowerCase());
+            if (factoryPreset) {
+                const factoryNames = currentPresets.factory.map(p => p.name).join(', ');
+                alert(`Cannot use factory preset name "${name}".\n\nFactory presets are: ${factoryNames}\n\nPlease choose a different name.`);
+                return;
+            }
+
+            // Check if preset already exists in user presets
+            const existingPreset = currentPresets.user.find(p => p.name.toLowerCase() === name.toLowerCase());
+            if (existingPreset) {
+                if (!confirm(`A preset named "${name}" already exists. Do you want to overwrite it?`)) {
+                    return;
+                }
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('description', description);
+
+                // Add all current form field values
+                formData.append('prose_size', document.getElementById('proseSize').value);
+                formData.append('prose_color', document.getElementById('proseColor').value);
+                formData.append('codehilite_theme', document.getElementById('codehilite_theme').value);
+                formData.append('codehilite_auto_bg', document.getElementById('codehilite_auto_bg').checked);
+                formData.append('codehilite_custom_bg', document.getElementById('codehilite_custom_bg').value);
+                formData.append('codehilite_wrapper_classes', document.getElementById('codehilite_wrapper_classes').value);
+
+                // Add all custom classes (22 elements)
+                const elements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'a', 'code', 'pre',
+                                  'blockquote', 'table', 'thead', 'tbody', 'tr', 'td', 'th',
+                                  'ul', 'ol', 'li', 'img', 'hr'];
+                elements.forEach(elem => {
+                    formData.append(`${elem}_classes`, document.getElementById(`${elem}_classes`).value);
+                });
+
+                const response = await fetch('/api/presets/save', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showPresetStatus(`Preset "${name}" saved`, 'success');
+                    await loadPresets(); // Refresh preset list
+
+                    // Set the newly saved preset as selected and update dropdown
+                    selectedPreset = data.preset.slug;
+                    document.getElementById('preset-selector').value = selectedPreset;
+
+                    // Enable/disable delete button (always enabled for user presets)
+                    document.getElementById('delete-preset-btn').disabled = false;
+
+                    // Update saved config state to prevent "unsaved changes" warning
+                    savedConfig = getCurrentConfig();
+                    hasUnsavedChanges = false;
+                    updateAllFieldIndicators();
+
+                    // Close modal and clear inputs
+                    const modal = document.getElementById('save-preset-modal');
+                    modal.close();
+                    document.getElementById('preset-name-input').value = '';
+                    document.getElementById('preset-description-input').value = '';
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Failed to save preset');
+            }
+        });
+
+        // Export preset button
+        document.getElementById('export-preset-btn').addEventListener('click', () => {
+            const selector = document.getElementById('preset-selector');
+            const slug = selector.value;
+
+            if (!slug) {
+                showPresetStatus('Please select a preset to export', 'error');
+                return;
+            }
+
+            // Trigger download
+            window.location.href = `/api/presets/export/${slug}`;
+            showPresetStatus('Preset exported', 'success');
+        });
+
+        // Import preset button
+        document.getElementById('import-preset-btn').addEventListener('click', () => {
+            document.getElementById('preset-import-input').click();
+        });
+
+        document.getElementById('preset-import-input').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/api/presets/import', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showPresetStatus(`Preset "${data.preset.name}" imported`, 'success');
+                    loadPresets(); // Refresh preset list
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Failed to import preset');
+            }
+
+            // Reset file input
+            e.target.value = '';
+        });
+
+        // Delete preset button
+        document.getElementById('delete-preset-btn').addEventListener('click', async () => {
+            const selector = document.getElementById('preset-selector');
+            const slug = selector.value;
+
+            if (!slug) return;
+
+            const presetName = selector.options[selector.selectedIndex].text;
+
+            if (!confirm(`Are you sure you want to delete the preset "${presetName}"? This cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/presets/delete/${slug}`, { method: 'DELETE' });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    showPresetStatus(`Preset "${presetName}" deleted`, 'success');
+                    loadPresets(); // Refresh preset list
+                    selector.value = ''; // Clear selection
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('Failed to delete preset');
+            }
+        });
+
+        // Auto-load preset on selection change
+        document.getElementById('preset-selector').addEventListener('change', async (e) => {
+            const slug = e.target.value;
+            const deleteBtn = document.getElementById('delete-preset-btn');
+
+            if (!slug) {
+                deleteBtn.disabled = true;
+                return;
+            }
+
+            // Enable/disable delete button
+            const isUserPreset = currentPresets.user.some(p => p.slug === slug);
+            deleteBtn.disabled = !isUserPreset;
+
+            // AUTO-LOAD: Warn if unsaved changes
+            if (hasUnsavedChanges) {
+                if (!confirm('You have unsaved changes.\n\nLoading this preset will replace ALL form fields with the preset\'s values.\n\nYour current customizations will be lost. Continue?')) {
+                    // Reset dropdown to previous value (empty = current settings)
+                    e.target.value = '';
+                    deleteBtn.disabled = true;
+                    return;
+                }
+            }
+
+            // Fetch and load preset
+            try {
+                const response = await fetch(`/api/presets/load/${slug}`, { method: 'POST' });
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    // Apply config to form (updates all input fields)
+                    applyConfigToForm(data.config);
+                    // Track the loaded preset
+                    selectedPreset = slug;
+                    const presetName = e.target.options[e.target.selectedIndex].text;
+                    showPresetStatus(`Preset "${presetName}" loaded`, 'success');
+                } else {
+                    showPresetStatus(data.error, 'error');
+                    // Reset dropdown on error
+                    e.target.value = '';
+                    deleteBtn.disabled = true;
+                }
+            } catch (error) {
+                showPresetStatus('Failed to load preset', 'error');
+                // Reset dropdown on error
+                e.target.value = '';
+                deleteBtn.disabled = true;
+            }
+        });
+
+        // Toggle custom background field based on auto background checkbox
+        function toggleCustomBackground() {
+            const autoCheckbox = document.getElementById('codehilite_auto_bg');
+            const customInput = document.getElementById('codehilite_custom_bg');
+
+            if (autoCheckbox && customInput) {
+                customInput.disabled = autoCheckbox.checked;
+            }
+        }
+
+        // Add event listener for auto background checkbox
+        document.getElementById('codehilite_auto_bg')?.addEventListener('change', toggleCustomBackground);
+
         // Initialize on page load
         loadSavedConfig();
         toggleCustomBackground();  // Set initial state of custom background field
+        loadPresets();  // Load preset list
     </script>
 </body>
 </html>

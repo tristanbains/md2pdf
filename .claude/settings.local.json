@@ -33,7 +33,9 @@
       "Bash(kill:*)",
       "Bash(ps:*)",
       "Bash(pstree:*)",
-      "Bash(xargs kill -TERM)"
+      "Bash(xargs kill -TERM)",
+      "Bash(for name in \"Factory Default\" \"Minimal\" \"Dark Mode\")",
+      "Bash(do echo \"Testing: $name\" curl -X POST 'http://127.0.0.1:8000/api/presets/save' -F \"name=$name\" -F 'description=Test' -s)"
     ],
     "deny": [],
     "ask": []
