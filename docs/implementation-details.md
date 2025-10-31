@@ -4,20 +4,207 @@ Deep technical reference for MD2PDF's critical implementation patterns. Consult 
 
 ## File Reading Must Exclude Metadata Files
 
-`main.py:70` in `get_file_content()` **MUST exclude `.tempconfig` AND `.meta` files**, otherwise JSON gets rendered as HTML:
+`main.py:60` in `get_file_content()` **MUST exclude `.tempconfig`, `.meta`, AND `.preset` files**, otherwise JSON/text gets rendered as HTML:
 ```python
-if filename.startswith(file_id) and not filename.endswith(('.meta', '.tempconfig')):
+if filename.startswith(file_id) and not filename.endswith(('.meta', '.tempconfig', '.preset')):
+```
+
+**Why Each File Must Be Excluded**:
+- `.meta` → Contains original filename as plain text
+- `.tempconfig` → Contains JSON config from "Generate Without Saving"
+- `.preset` → Contains preset slug as plain text (e.g., "minimal", "dark-mode")
+
+## Config Priority System (Three-Tier Architecture)
+
+The preview endpoint (`main.py:/preview/{file_id}`) uses a **three-tier priority system** to determine which config to use:
+
+**Priority Order (Highest to Lowest)**:
+1. **`.tempconfig` file** - Temporary config from "Generate Without Saving"
+2. **`.preset` marker file** - Preset slug from preset selection + upload
+3. **Backend `config.yaml`** - Saved settings or loaded preset
+
+**Implementation** (`main.py:177-216`):
+```python
+if os.path.exists(temp_config_path):
+    # Priority 1: Use temporary config (JSON)
+    pdf_gen.config = json.load(temp_config_path)
+elif os.path.exists(preset_marker_path):
+    # Priority 2: Load preset config directly from YAML
+    preset_slug = open(preset_marker_path).read().strip()
+    preset_path = factory_presets_dir / f"{preset_slug}.yaml" or user_presets_dir / f"{preset_slug}.yaml"
+    pdf_gen.config = yaml.safe_load(preset_path)
+else:
+    # Priority 3: Use backend config.yaml
+    pdf_gen = PDFGenerator()  # Loads config.yaml automatically
 ```
 
 ## Temp Config Flow (Unsaved Settings)
 
 **Frontend → Backend → Preview** workflow:
 1. User clicks "Generate Without Saving"
-2. `index.html` calls `getCurrentConfig()` to collect all form values including `prose_color`
+2. `index.html` calls `getCurrentConfig()` to collect all form values
 3. Frontend sends config as `temp_config` JSON field in FormData
-4. Backend saves to `{uuid}.tempconfig` (around `main.py:240`)
-5. Preview route (`main.py:191-250`) checks for `.tempconfig` first, falls back to saved config
+4. Backend saves to `{uuid}.tempconfig` (`main.py:276-279`)
+5. Preview route checks for `.tempconfig` first (highest priority)
 6. If found, loads JSON and sets `pdf_gen.config = temp_config`
+
+## Preset System Architecture
+
+Complete guide to the preset management system introduced for saving and loading styling configurations.
+
+### Directory Structure
+```
+presets/
+  factory/              # Read-only factory presets
+    default.yaml
+    minimal.yaml
+    academic.yaml
+    dark-mode.yaml
+  user/                 # User-created presets (fully editable)
+    my-custom.yaml
+    work-docs.yaml
+```
+
+### Preset File Format
+Presets are YAML files with configuration + metadata:
+```yaml
+_metadata:
+  name: "My Custom Style"
+  description: "Professional styling for work documents"
+  created_at: "2025-01-15T10:30:00"
+  version: "1.0"
+  is_factory: false    # Only for factory presets
+prose_size: prose-lg
+prose_color: prose-slate
+codehilite_theme: github-dark
+codehilite_container:
+  auto_background: true
+  custom_background: ""
+  wrapper_classes: "p-4 rounded-lg overflow-x-auto my-4"
+custom_classes:
+  h1: "text-4xl font-bold"
+  # ... all 22 elements
+pdf_options:
+  # ... PDF settings
+```
+
+### Preset Workflows
+
+**1. Creating/Saving Presets** (`POST /api/presets/save`):
+- User configures styling in form
+- Clicks "Save as Preset" button
+- Modal prompts for name + description
+- Frontend sends **all form fields** to backend (`main.py:313-420`)
+- Backend validates name (no factory name conflicts)
+- Creates slug from name: `"My Style"` → `"my-style"`
+- Saves to `presets/user/{slug}.yaml` with metadata
+- Frontend updates dropdown and sets `selectedPreset = slug`
+
+**2. Loading Presets** (`POST /api/presets/load/{slug}`):
+- User selects from dropdown
+- If unsaved changes exist, warn before loading
+- Backend loads preset YAML (`main.py:422-469`)
+- Removes `_metadata` key from config
+- **Saves to backend `config.yaml`** (this is key!)
+- Returns config to frontend
+- Frontend calls `applyConfigToForm(config)` to update all inputs
+- Sets `selectedPreset = slug` and `hasUnsavedChanges = false`
+
+**3. Upload with Preset Selected** (`POST /api/convert`):
+- Frontend checks: Is `selectedPreset` set? (`templates/index.html:916`)
+- If yes, sends `preset_slug` parameter in FormData
+- Backend creates `.preset` marker file with slug (`main.py:281-284`)
+- Preview endpoint reads marker and loads preset YAML directly (`main.py:193-213`)
+- **Critical**: Preview loads preset from YAML, not from `config.yaml`
+- This ensures correct config even if `config.yaml` was modified after preset selection
+
+### State Management (Frontend)
+
+**`selectedPreset` Variable** (`templates/index.html`):
+- Tracks currently selected preset slug
+- Set on preset load (line ~1270)
+- Sent with upload (line ~917)
+- **Cleared on save** (line ~843, ~898) to prevent preset from being used when custom settings intended
+
+**State Transitions**:
+```
+User Action               selectedPreset    Form State           Upload Behavior
+─────────────────────────────────────────────────────────────────────────────────
+Select preset             "minimal"         Synced with preset   Sends preset_slug
+Modify form               "minimal"         Modified             Shows unsaved modal
+Save settings             null              Synced with saved    Uses config.yaml
+Save & Generate           null              Synced with saved    Uses config.yaml
+Generate Without Saving   "minimal"         Modified             Sends temp_config
+```
+
+### Preset API Endpoints
+
+All in `main.py`:
+
+**`GET /api/presets`** (line 300-311)
+- Lists all factory + user presets
+- Returns: `{factory: [...], user: [...]}`
+- Each preset: `{name, slug, description, created_at, is_factory, can_delete}`
+
+**`POST /api/presets/save`** (line 313-420)
+- Receives all 25+ form fields
+- Validates name (no conflicts with factory presets)
+- Creates slug and saves to `user/{slug}.yaml`
+- Returns: `{status, message, preset: {name, slug, path}}`
+
+**`POST /api/presets/load/{slug}`** (line 422-469)
+- Loads preset from factory or user directory
+- Saves to `config.yaml` (important!)
+- Returns config (without `_metadata`)
+
+**`DELETE /api/presets/delete/{slug}`** (line 471-501)
+- Only allows deleting user presets
+- Returns 403 if trying to delete factory preset
+
+**`GET /api/presets/export/{slug}`** (line 503-534)
+- Returns preset as downloadable YAML file
+- Filename: `{preset-name}.md2pdf-preset.yaml`
+
+**`POST /api/presets/import`** (line 536-581)
+- Accepts YAML file upload
+- Validates config structure
+- Optionally renames via `name` parameter
+- Saves to user presets
+
+### Factory Presets
+
+Defined in `pdf_generator.py:325-406`:
+
+**`default.yaml`** - Original MD2PDF styling with readable typography
+**`minimal.yaml`** - Clean minimal styling, prose-sm, gray prose color
+**`academic.yaml`** - Formal academic styling with bordered tables, serif headings
+**`dark-mode.yaml`** - Dark theme with prose-invert, monokai code theme
+
+Factory presets created automatically if missing (`_create_factory_presets()` on init).
+
+### Critical Implementation Details
+
+**Preset Loading Must Save to config.yaml**:
+- When user selects preset, backend saves to `config.yaml` (`main.py:453`)
+- This ensures form and backend are in sync
+- Frontend reloads config via `/api/config` to verify sync
+
+**Preview Preset Markers Take Priority**:
+- If `.preset` marker exists, preview loads preset YAML directly
+- This bypasses `config.yaml` entirely
+- Ensures correct preview even if config changed after selection
+
+**Clearing Preset Selection on Custom Save**:
+- When user saves custom settings, `selectedPreset` must be cleared
+- Otherwise next upload would use preset instead of custom config
+- Cleared in: Save Settings button, Save & Generate button
+
+**Preset Name Validation** (`pdf_generator.py:569-589`):
+- Max 50 characters
+- Only alphanumeric, spaces, dashes, underscores
+- No directory traversal (`..`, `/`, `\`)
+- Not reserved names (config, temp, default)
+- Case-insensitive check against factory preset names
 
 ## Unsaved Changes Detection System
 
