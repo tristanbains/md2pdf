@@ -57,14 +57,14 @@ def get_file_content(file_id: str) -> tuple[str, str]:
             original_filename = f.read().strip()
 
     for filename in os.listdir(UPLOAD_DIR):
-        if filename.startswith(file_id) and not filename.endswith(('.meta', '.tempconfig')):
+        if filename.startswith(file_id) and not filename.endswith(('.meta', '.tempconfig', '.preset')):
             file_path = os.path.join(UPLOAD_DIR, filename)
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
             display_filename = original_filename if original_filename else filename
             return content, display_filename
-    
+
     raise FileNotFoundError(f"File with ID {file_id} not found")
 
 @app.get("/", response_class=HTMLResponse)
@@ -175,8 +175,10 @@ async def preview_markdown(request: Request, file_id: str):
 
         # Check for temporary config first
         temp_config_path = os.path.join(UPLOAD_DIR, f"{file_id}.tempconfig")
+        preset_marker_path = os.path.join(UPLOAD_DIR, f"{file_id}.preset")
 
         if os.path.exists(temp_config_path):
+            # Use temporary config (from "Generate Without Saving")
             try:
                 with open(temp_config_path, 'r') as f:
                     temp_config = json.load(f)
@@ -188,7 +190,29 @@ async def preview_markdown(request: Request, file_id: str):
                     pdf_gen.config = temp_config
             except Exception as e:
                 pdf_gen = PDFGenerator()
+        elif os.path.exists(preset_marker_path):
+            # Use preset config (from preset selection + upload)
+            try:
+                with open(preset_marker_path, 'r') as f:
+                    preset_slug = f.read().strip()
+
+                # Load preset config
+                pdf_gen = PDFGenerator()
+                preset_path = pdf_gen.factory_presets_dir / f"{preset_slug}.yaml"
+                if not preset_path.exists():
+                    preset_path = pdf_gen.user_presets_dir / f"{preset_slug}.yaml"
+
+                if preset_path.exists():
+                    with open(preset_path, 'r') as f:
+                        preset_data = yaml.safe_load(f)
+                    # Remove metadata and apply preset config
+                    preset_data.pop('_metadata', None)
+                    pdf_gen.config = preset_data
+            except Exception as e:
+                print(f"Error loading preset from marker: {e}")
+                pdf_gen = PDFGenerator()
         else:
+            # Use backend config.yaml (from saved settings or loaded preset)
             pdf_gen = PDFGenerator()
 
         try:
@@ -257,7 +281,8 @@ async def theme_preview(request: Request, current: Optional[str] = None):
 @app.post("/api/convert")
 async def convert_markdown(
     file: UploadFile = File(...),
-    temp_config: Optional[str] = Form(None)
+    temp_config: Optional[str] = Form(None),
+    preset_slug: Optional[str] = Form(None)
 ):
     try:
         # Validate file type
@@ -276,6 +301,11 @@ async def convert_markdown(
             temp_config_path = os.path.join(UPLOAD_DIR, f"{file_id}.tempconfig")
             with open(temp_config_path, 'w') as f:
                 f.write(temp_config)
+        # If preset slug provided, save preset marker
+        elif preset_slug:
+            preset_marker_path = os.path.join(UPLOAD_DIR, f"{file_id}.preset")
+            with open(preset_marker_path, 'w') as f:
+                f.write(preset_slug)
 
         # Return preview URL instead of PDF
         preview_url = f"/preview/{file_id}"

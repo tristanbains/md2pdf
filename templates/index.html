@@ -35,7 +35,7 @@
         </div>
 
         <!-- Upload Card (MOVED TO TOP) -->
-        <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card bg-base-100  mb-6">
             <div class="card-body">
                 <h2 class="card-title">Upload Markdown File</h2>
 
@@ -76,7 +76,7 @@
         </div>
 
         <!-- Settings Form (MOVED TO BOTTOM, COLLAPSIBLE) -->
-        <div class="collapse collapse-arrow bg-base-100 shadow-xl mb-6">
+        <div class="collapse collapse-arrow bg-base-100 mb-6">
             <input type="checkbox" />
             <div class="collapse-title text-xl font-medium">
                 ⚙️ PDF Styling Settings
@@ -839,6 +839,10 @@
                     await loadSavedConfig();
                     // Reset the unsaved changes flag
                     checkForChanges();
+                    // Clear preset selection (user saved custom settings)
+                    selectedPreset = null;
+                    document.getElementById('preset-selector').value = '';
+                    document.getElementById('delete-preset-btn').disabled = true;
                 } else {
                     showStatus('Error saving settings', 'error');
                 }
@@ -890,7 +894,11 @@
                 });
 
                 await loadSavedConfig();
-                // Use saved config, no need for temp config
+                // Clear preset selection (user saved custom settings)
+                selectedPreset = null;
+                document.getElementById('preset-selector').value = '';
+                document.getElementById('delete-preset-btn').disabled = true;
+                // Use saved config, no need for temp config or preset slug
                 await processUpload(false);
             } catch (error) {
                 loadingModal.close();
@@ -911,6 +919,10 @@
                 const currentConfig = getCurrentConfig();
                 const configJson = JSON.stringify(currentConfig);
                 formData.append('temp_config', configJson);
+            }
+            // If a preset is currently selected, send the preset slug
+            else if (selectedPreset) {
+                formData.append('preset_slug', selectedPreset);
             }
 
             try {
